@@ -30,7 +30,11 @@ def seed() -> None:
         timestamp=root_tool.timestamp + 1,
     )
     inner_tool = ToolEvent(
-        tool_name="calculate", tool_call_id="inner", skill_path="/analysis", depth=1
+        tool_name="calculate",
+        tool_call_id="inner",
+        skill_path="/analysis",
+        depth=1,
+        arguments={"expression": "6 * 7"},
     )
     skill = SkillNode(
         name="analysis",

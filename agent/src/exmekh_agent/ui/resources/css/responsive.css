@@ -4,7 +4,7 @@
 .chat-page-layout > .nicegui-column { min-width: 0; }
 .chat-composer { flex-shrink: 0; }
 .chat-scroll-container, .graph-view-container, .raw-history-container { min-width: 0; }
-.chat-message-row, .msg-user, .msg-assistant { min-width: 0; max-width: 100%; }
+.chat-message-row, .msg-assistant { min-width: 0; max-width: 100%; }
 .raw-history-toolbar { flex-wrap: wrap; gap: 10px; }
 .graph-bottom-menu, .graph-stage { min-width: 0; max-width: 100%; }
 .message-edit-dialog .q-card { max-height: 92dvh; overflow-y: auto; }
@@ -13,8 +13,7 @@
     .chat-scroll-container { padding: 16px 12px; }
     .raw-history-container, .graph-view-container { padding: 12px 8px; }
     .chat-composer { width: calc(100% - 20px); margin-bottom: max(8px, env(safe-area-inset-bottom)); }
-    .skill-compact-header > .nicegui-row { min-width: 0; flex-wrap: wrap; gap: 4px; }
-    .skill-compact-header { flex-wrap: wrap; gap: 4px; }
+    .skill-compact-header { gap: 4px; }
 }
 @media (max-width: 520px) {
     .lm-header { height: var(--app-header-height) !important; flex-wrap: nowrap; }
@@ -30,10 +29,11 @@
     .input-bar-context-info { min-width: 0; flex: 1; font-size: 10px; gap: 4px; }
     .input-bar-model-name { flex: 1 1 100%; max-width: 100% !important; }
     .tool-event-meta { max-width: 30%; gap: 4px; }
-    .tool-event-meta > div:not(.message-time) { display: none; }
+    .tool-event-meta > div:not(.message-time, .skill-active-badge),
+    .skill-active-badge > .nicegui-label { display: none; }
     .tool-event-name { max-width: 60%; }
-    .skill-depth-2, .skill-depth-3 { margin-left: 4px; }
-    .skill-container .nicegui-column { padding-left: 6px; }
+    .skill-activity { padding-inline-start: 6px; }
+    .skill-compact-header .skill-path { display: none; }
     .invocation-output-panel { padding: 10px 32px 10px 10px; font-size: 11px; }
     .raw-history-container { padding: 8px 0; }
     .raw-history-toolbar > .nicegui-row { flex-wrap: wrap; gap: 6px; }
@@ -47,5 +47,5 @@
 }
 @media (hover: none) {
     .user-copy-btn, .user-edit-btn { opacity: 1 !important; pointer-events: auto !important; }
-    .tool-output-toggle { min-height: 32px; }
+    .tool-output-toggle, .skill-compact-header { min-height: 32px; }
 }

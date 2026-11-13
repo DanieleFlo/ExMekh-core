@@ -194,13 +194,22 @@ def record_tool_event(events: list[ToolEvent], incoming: ToolEvent) -> ToolEvent
     return recorded
 
 
-class ReasoningBlock(BaseModel):
+class ContentBlock(BaseModel):
+    """Consecutive visible response tokens from one execution scope."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     skill_path: str = "/"
     depth: int = 0
-    generation_index: int = 1
     content: str = ""
     timestamp: float = Field(default_factory=time.time)
+
+    def token_snapshot(self, token: str) -> ContentBlock:
+        """Detach the published token from the block still being accumulated."""
+        return self.model_copy(update={"content": token})
+
+
+class ReasoningBlock(ContentBlock):
+    generation_index: int = 1
     end_time: float | None = None
     duration_seconds: float | None = None
 
@@ -238,6 +247,12 @@ class SkillNode(BaseModel):
     tokens_after_close: int | None = None
     opening_tool_call_id: str | None = None
     tokens_pending: bool = False
+
+    def receive_snapshot(self, action: str) -> SkillNode:
+        """Own the published data and apply the lifecycle event to the copy."""
+        snapshot = self.model_copy(deep=True)
+        snapshot.finalize_timing(action if action in ("completed", "error") else None)
+        return snapshot
 
     def execution_details(self) -> SkillExecutionDetails:
         """Panel structure and results, excluding transient image progress."""
@@ -401,6 +416,36 @@ class SkillNode(BaseModel):
             current = now if now is not None else time.time()
             return max(0.0, current - self.start_time)
         return 0.0
+
+
+def find_skill_invocation(
+    skills: list[SkillNode], path: str, call_id: str | None = None
+) -> SkillNode | None:
+    for root in reversed(skills):
+        found = root.find_invocation(path, call_id)
+        if found is not None:
+            return found
+    return None
+
+
+def record_skill_snapshot(
+    skills: list[SkillNode], snapshot: SkillNode
+) -> SkillNode | None:
+    """Merge an invocation and return it when only transient details changed."""
+    existing = find_skill_invocation(
+        skills, snapshot.path, snapshot.opening_tool_call_id
+    )
+    if existing is not None:
+        previous = existing.execution_details()
+        existing.merge_snapshot(snapshot)
+        return existing if previous == existing.execution_details() else None
+
+    for root in reversed(skills):
+        if root.attach_descendant(snapshot):
+            return None
+    if snapshot.depth <= 1:
+        skills.append(snapshot)
+    return None
 
 
 def ordered_execution_activity(

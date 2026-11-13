@@ -282,11 +282,15 @@ async def test_real_exmekh_turn_stops_before_another_inference_when_approval_is_
             assert session.messages[-1].error == (
                 "cancelled" if action == "stop" else None
             )
-            assert session.messages[-1].content.startswith("Output before approval")
+            message = session.messages[-1]
+            assert message.content_blocks[0].content.startswith(
+                "Output before approval"
+            )
             if action == "decline":
-                assert (
-                    "Reply after declining the command" in session.messages[-1].content
-                )
+                assert message.content == "Reply after declining the command"
+                assert message.content_blocks[-1].content == message.content
+            else:
+                assert message.content == message.content_blocks[0].content
             labels = [
                 element.text
                 for element in controller.chat_view.chat_container.descendants()

@@ -261,7 +261,7 @@ def test_execute_agent_turn_sync_deep_agent(tmp_path: Path) -> None:
             agent_mode="deep_agent",
             capabilities_path_str=str(cap_dir),
             name_hds="main",
-            on_token=lambda t: tokens.append(t),
+            on_token=lambda t, p, d: tokens.append((t, p, d)),
             on_reasoning=lambda t, p="/", d=0: reasoning.append((t, p, d)),
             on_tool_event=lambda ev: tools.append(ev),
             on_skill_event=lambda node, act: skills.append((node.path, act)),
@@ -269,6 +269,7 @@ def test_execute_agent_turn_sync_deep_agent(tmp_path: Path) -> None:
         )
 
         assert res == "Deep agent final output"
+        assert tokens == [("Final token", "/second-skill", 1)]
         assert len(reasoning) >= 4
         assert len(tools) == 1
         assert tools[0].tool_name == "nested_tool"

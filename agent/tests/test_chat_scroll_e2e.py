@@ -347,8 +347,21 @@ async def test_point_of_interest_targets_current_message_row(
                 original.textContent = 'Same message';
                 original.style.height = '1600px';
                 chat.appendChild(original);
+                const skill = document.createElement('div');
+                skill.style.display = 'none';
+                const steering = document.createElement('div');
+                steering.className = 'chat-message-row chat-message-user';
+                steering.textContent = 'Skill steering';
+                skill.appendChild(steering);
+                chat.appendChild(skill);
                 window.__exmekhChatScroll.refreshPointsOfInterest();
                 const track = document.getElementById('exmekh-chat-poi-track');
+                const steeringDot = () => Array.from(track.querySelectorAll('.chat-poi-dot'))
+                    .some(dot => dot.title.includes('Skill steering'));
+                const visibleWhileCollapsed = steeringDot();
+                skill.style.display = '';
+                window.__exmekhChatScroll.refreshPointsOfInterest();
+                const visibleWhileExpanded = steeringDot();
                 const oldDot = track.querySelector('.chat-poi-dot');
                 if (!oldDot) return { initialized: false };
 
@@ -360,6 +373,7 @@ async def test_point_of_interest_targets_current_message_row(
                 const newDot = track.querySelector('.chat-poi-dot');
                 newDot.click();
                 return { initialized: true, rebuilt: newDot !== oldDot,
+                    visibleWhileCollapsed, visibleWhileExpanded,
                     reached: Math.abs(chat.scrollTop - expected) < 2,
                     selected: chat.__exmekhScrollState.selectedPoi === replacement };
             }"""
@@ -367,6 +381,8 @@ async def test_point_of_interest_targets_current_message_row(
         assert result == {
             "initialized": True,
             "rebuilt": True,
+            "visibleWhileCollapsed": False,
+            "visibleWhileExpanded": True,
             "reached": True,
             "selected": True,
         }

@@ -123,7 +123,12 @@ async def test_assistant_tool_image_preview_is_visible_and_persistent():
                     )
                 )
                 assert len(set(border_colors)) == 3
-                await send_command(page, "Edit the image references")
+                await send_command(
+                    page,
+                    "Edit the image references. Use the first image for the composition, "
+                    "the second image for the subject, and the third image for the colors. "
+                    "Keep the original background and make the lighting feel natural.",
+                )
                 await wait_turn_completion(page)
                 state = await (await page.request.get(url + "/test/media-state")).json()
                 message = state["session"]["messages"][-2]
@@ -140,10 +145,33 @@ async def test_assistant_tool_image_preview_is_visible_and_persistent():
                 await expect(
                     page.locator(".msg-user").last.locator(".exmekh-image-thumbnail")
                 ).to_have_count(3)
-                history = page.locator(".msg-user").last.locator(
-                    ".message-image-attachment"
-                )
+                bubble = page.locator(".msg-user").last
+                history = bubble.locator(".message-image-attachment")
                 await expect(history).to_have_count(3)
+                phone = await browser.new_page(
+                    viewport={"width": 390, "height": 844}, has_touch=True
+                )
+                await phone.goto(page.url, wait_until="networkidle")
+                for display in (page, phone):
+                    message_bubble = display.locator(".msg-user").last
+                    image_cards = message_bubble.locator(".message-image-attachment")
+                    await expect(image_cards).to_have_count(3)
+                    bubble_box = await message_bubble.bounding_box()
+                    row_box = await message_bubble.locator("..").bounding_box()
+                    assert bubble_box is not None and row_box is not None
+                    right_edge = bubble_box["x"] + bubble_box["width"]
+                    assert bubble_box["width"] <= 0.8 * row_box["width"] + 1
+                    assert abs(right_edge - (row_box["x"] + row_box["width"])) <= 1
+                    for card in await image_cards.all():
+                        card_box = await card.bounding_box()
+                        assert card_box is not None
+                        assert card_box["x"] >= bubble_box["x"] - 1
+                        assert card_box["x"] + card_box["width"] <= right_edge + 1, (
+                            display.viewport_size,
+                            bubble_box,
+                            card_box,
+                        )
+                await phone.close()
                 for filename, destination, color in zip(
                     ("large.png", "generated-image.png", "both.png"),
                     ("LLM", "Image model", "Both"),

@@ -36,7 +36,7 @@ class AgentTurnRequest:
     agent_mode: str
     capabilities_path_str: str
     name_hds: str
-    on_token: Callable[[str], None]
+    on_token: Callable[..., None]
     on_reasoning: Callable[..., None]
     on_tool_event: Callable[[ToolEvent], None]
     on_skill_event: Callable[[SkillNode, str], None] | None = None

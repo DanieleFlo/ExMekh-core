@@ -4,11 +4,24 @@
 
 /* Chat bubble styling - Codex Minimalist */
 .msg-user {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 80%;
+    overflow-wrap: anywhere;
     background: var(--bg-elevated) !important;
     color: var(--text-main) !important;
     border: none !important;
     border-radius: 12px !important;
     box-shadow: none !important;
+}
+
+.msg-user > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.msg-user pre {
+    overflow-x: auto;
 }
 
 .user-message-footer {
@@ -58,11 +71,11 @@
 }
 
 .steering-tool-marker {
+    --execution-row-accent: var(--border-strong);
     color: var(--text-muted);
     font-family: "JetBrains Mono", Consolas, Menlo, monospace;
-    font-size: 10px;
-    padding: 2px 0 2px 8px;
-    border-left: 2px solid var(--border-strong);
+    font-size: 0.6875rem !important;
+    overflow-wrap: anywhere;
 }
 
 .msg-assistant {
@@ -96,63 +109,14 @@
     background: transparent !important;
 }
 
-/* Master Reasoning Row (Single Compact Line) */
-.reasoning-master-expansion {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    margin-bottom: 2px;
+/* Align the expansion header with the other rows in the timeline. */
+.reasoning-master-expansion > .q-expansion-item__container > .q-item {
+    min-height: 0;
+    padding: 0;
 }
 
-.reasoning-master-header {
-    background: color-mix(in srgb, var(--bg-elevated) 45%, transparent) !important;
-    border: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent) !important;
-    border-radius: 8px !important;
-    padding: 6px 12px !important;
-    transition: all 0.2s ease !important;
-    user-select: none !important;
-}
-
-.reasoning-master-header:hover {
-    background: color-mix(in srgb, var(--bg-raised) 55%, transparent) !important;
-    border-color: color-mix(in srgb, var(--border-active) 85%, transparent) !important;
-}
-
-.reasoning-count-badge {
-    background: color-mix(in srgb, var(--bg-raised) 60%, transparent) !important;
-    border: 1px solid color-mix(in srgb, var(--border-active) 40%, transparent) !important;
-}
-
-/* Sub-block Reasoning Cards */
-.reasoning-sub-block {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    margin-top: 2px;
-    margin-bottom: 2px;
-}
-
-.reasoning-sub-header {
-    background: color-mix(in srgb, var(--bg-collapsed) 40%, transparent) !important;
-    border: 1px solid color-mix(in srgb, var(--border-subtle) 35%, transparent) !important;
-    border-radius: 6px !important;
-    padding: 4px 10px !important;
-    transition: all 0.15s ease !important;
-    user-select: none !important;
-}
-
-.reasoning-sub-header:hover {
-    background: color-mix(in srgb, var(--bg-elevated) 65%, transparent) !important;
-    border-color: color-mix(in srgb, var(--border-active) 60%, transparent) !important;
-}
-
-/* Smooth Chevron Rotation */
-.reasoning-chevron {
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.q-expansion-item--expanded > .q-expansion-item__container > .q-expansion-item__header .reasoning-chevron {
-    transform: rotate(180deg) !important;
+.reasoning-master-expansion > .q-expansion-item__container > .q-item > .q-focus-helper {
+    display: none;
 }
 
 .q-expansion-item {
@@ -539,9 +503,38 @@
     width: min(1100px, 94vw);
     max-width: 94vw !important;
 }
-.exmekh-preview-image {
-    width: 100%;
+.image-preview-zoom {
+    padding-right: 4px;
+    border-right: 1px solid var(--border-subtle);
+}
+.image-preview-zoom-level {
+    min-width: 42px;
+}
+.image-preview-viewport {
+    flex: 1;
+    min-width: 0;
     height: 78vh;
+    overflow: auto;
+    overscroll-behavior: contain;
+    user-select: none;
+}
+.image-preview-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: max(100%, var(--image-preview-zoom, 100%));
+    height: max(100%, var(--image-preview-zoom, 100%));
+}
+.exmekh-preview-image {
+    width: min(100%, var(--image-preview-zoom, 100%));
+    height: min(100%, var(--image-preview-zoom, 100%));
+}
+.image-preview-pannable .exmekh-preview-image {
+    cursor: grab;
+}
+.image-preview-dragging,
+.image-preview-dragging .exmekh-preview-image {
+    cursor: grabbing;
 }
 
 .generated-image-slot { position: relative; width: min(320px, 100%); overflow: hidden; border: 1px solid var(--border-active); border-radius: 12px; background: var(--bg-elevated); gap: 0; margin: 0; padding: 0; }

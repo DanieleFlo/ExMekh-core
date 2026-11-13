@@ -18,7 +18,9 @@ from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
+    ContentBlock,
     QueuedMessage,
+    ReasoningBlock,
     SkillNode,
     SteeringInsertion,
     ToolEvent,
@@ -335,19 +337,49 @@ def test_skill_completion_anchors_and_reused_call_ids_keep_the_original_boundary
     early = insertion("early", after="shared", timestamp=15)
     completed = insertion("completed", after="open", path=skill.path, timestamp=30)
     legacy = insertion("legacy", after="open", path=skill.path, timestamp=None)
-    timeline = ChatMessage(
+    message = ChatMessage(
         role="assistant",
         tool_events=[first, future],
         skills=[skill],
         steering_insertions=[early, completed, legacy],
-    ).execution_timeline()
-    assert timeline.root_activity() == [
+    )
+    assert message.execution_timeline().root_activity() == [
         first.normalized_copy(),
         early,
         skill,
         completed,
         legacy,
         future.normalized_copy(),
+    ]
+    chat = message.execution_timeline(include_stream=True)
+    assert chat.root_activity() == [
+        first.normalized_copy(),
+        early,
+        skill,
+        future.normalized_copy(),
+    ]
+    assert chat.skill_activity(skill) == [completed, legacy]
+
+
+def test_chat_steering_uses_confirmation_time_between_text_blocks():
+    from_before = ReasoningBlock(content="Thinking before confirmation", timestamp=12)
+    after = ContentBlock(content="Text after confirmation", timestamp=20)
+    tool = ToolEvent(tool_name="lookup", tool_call_id="lookup", timestamp=10)
+    guidance = insertion("timed", after="lookup", timestamp=15)
+    untimed = insertion("untimed", after="lookup", timestamp=None)
+    message = ChatMessage(
+        role="assistant",
+        tool_events=[tool],
+        reasoning_blocks=[from_before],
+        content_blocks=[after],
+        steering_insertions=[guidance, untimed],
+    )
+    assert message.execution_timeline(include_stream=True).root_activity() == [
+        tool.normalized_copy(),
+        untimed,
+        from_before,
+        guidance,
+        after,
     ]
 
 

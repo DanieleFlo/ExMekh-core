@@ -122,6 +122,10 @@ async def test_steering_button_updates_the_running_exmekh_turn_after_refresh(
             )
             # ExMekh-Lib confirms insertion before the next inference completes.
             await expect(page.locator(".steering-tool-marker")).to_have_count(2)
+            await expect(
+                page.locator(".chat-message-streaming .msg-user-steering")
+            ).to_contain_text(["Use the other file", "Also keep the existing API"])
+            await expect(page.locator(".steering-loading-spinner")).to_have_count(0)
             await expect(page.locator(".chat-message-streaming")).to_be_visible()
             await page.reload(wait_until="networkidle")
             await expect(page.locator(".steering-tool-marker")).to_have_count(2)
@@ -190,7 +194,7 @@ async def test_steering_button_updates_the_running_exmekh_turn_after_refresh(
             await browser.close()
 
 
-async def test_graph_keeps_steering_inside_nested_skill_after_reload(
+async def test_chat_and_graph_keep_steering_inside_nested_skill_after_reload(
     agent_nested_steering_mock_server: str,
 ) -> None:
     server = agent_nested_steering_mock_server
@@ -211,6 +215,9 @@ async def test_graph_keeps_steering_inside_nested_skill_after_reload(
             await page.request.post(f"{server}/test/release-inference")
 
             await wait_for_mock_requests(page, f"{server}/test/steering-stats", 2)
+            await expect(
+                page.locator(".skill-container-active .parsed-response-content")
+            ).to_have_text("Parent skill progress.")
             await send_command(page, "Use the nested route")
             row = page.locator(".exmekh-queue-item").filter(
                 has_text="Use the nested route"
@@ -233,6 +240,63 @@ async def test_graph_keeps_steering_inside_nested_skill_after_reload(
                 and item.get("content") == "Use the nested route"
                 for item in nested_history
             )
+            for reload in (False, True):
+                if reload:
+                    await page.reload(wait_until="networkidle")
+                parent = page.get_by_role(
+                    "button", name="Show skill mock-skill", exact=True
+                )
+                parent_text = page.get_by_text("Parent skill progress.", exact=True)
+                nested_text = page.get_by_text(
+                    "Nested skill before the tool.", exact=True
+                )
+                await expect(parent_text).to_be_hidden()
+                await expect(nested_text).to_be_hidden()
+                await parent.click()
+                await expect(parent_text).to_be_visible()
+                nested = page.get_by_role(
+                    "button", name="Show skill nested-skill", exact=True
+                )
+                await expect(nested_text).to_be_hidden()
+                await nested.click()
+                scope = nested.locator("..")
+                await expect(scope.locator(".msg-user-steering")).to_have_count(1)
+                await expect(scope.locator(".msg-user-steering")).to_contain_text(
+                    "Use the nested route"
+                )
+                await expect(page.locator(".msg-user-steering")).to_have_count(1)
+                ordered = scope.locator(
+                    ".steering-tool-marker, .msg-user-steering, .reasoning-master-header, "
+                    ".parsed-response-content, .tool-event-card"
+                )
+                steps = await ordered.evaluate_all(
+                    """elements => elements.map(element => {
+                        if (element.matches('.steering-tool-marker')) return 'marker';
+                        if (element.matches('.msg-user-steering')) return 'steering';
+                        if (element.matches('.reasoning-master-header')) return 'thinking';
+                        if (element.matches('.tool-event-card')) {
+                            return element.querySelector('.tool-event-name').textContent.trim();
+                        }
+                        return element.textContent.trim();
+                    })"""
+                )
+                start = steps.index("marker")
+                assert steps[start : start + 8] == [
+                    "marker",
+                    "steering",
+                    "thinking",
+                    "Nested skill before the tool.",
+                    "Tool: nested-sub-tool",
+                    "thinking",
+                    "Nested skill between the tools.",
+                    "Tool: nested-sub-tool",
+                ]
+                await nested.click()
+                await expect(nested_text).to_be_hidden()
+                await expect(scope.locator(".msg-user-steering")).to_be_hidden()
+                await parent.click()
+                await expect(parent_text).to_be_hidden()
+
             await page.locator(".sub-tabs-bar .q-tab:has-text('Graph')").click()
             for reload in (False, True):
                 if reload:

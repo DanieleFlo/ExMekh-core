@@ -10,12 +10,14 @@ from typing import Any, Literal
 
 from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
 from exmekh_lib.core.models.assistant_message import ToolCall
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.compaction import (
+    CompactionActivity,
     ModelContextCheckpoint,
     replay_model_context,
+    update_compaction_activity,
 )
 from exmekh_agent.exmekh_bridge.history.recorded_history import (
     RecordedHistory,
@@ -25,6 +27,7 @@ from exmekh_agent.exmekh_bridge.history.tool_calls import (
     parse_tool_calls,
 )
 from exmekh_agent.exmekh_bridge.models.execution import (
+    ContentBlock,
     ProviderContextUsage,
     ReasoningBlock,
     SkillNode,
@@ -128,12 +131,15 @@ class QueuedMessage(MessageAttachments):
 
 
 class ChatMessage(MessageAttachments):
+    _receiving_content: bool = PrivateAttr(default=False)
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     role: MessageRole
     content: str = ""
     display_content: str | None = None
     reasoning_content: str = ""
     reasoning_blocks: list[ReasoningBlock] = Field(default_factory=list)
+    content_blocks: list[ContentBlock] = Field(default_factory=list)
     tool_events: list[ToolEvent] = Field(default_factory=list)
     skills: list[SkillNode] = Field(default_factory=list)
     raw_history: list[dict[str, Any]] = Field(default_factory=list)
@@ -144,7 +150,7 @@ class ChatMessage(MessageAttachments):
     steering_insertions: list[SteeringInsertion] | None = None
     skill_history_tree: list[dict[str, Any]] = Field(default_factory=list)
     context_usage: ProviderContextUsage | None = None
-    compaction_progress: list[DeepAgentCompactionProgressEvent] = Field(
+    compaction_progress: list[CompactionActivity] = Field(
         default_factory=list, exclude=True
     )
     timestamp: float = Field(default_factory=time.time)
@@ -188,6 +194,29 @@ class ChatMessage(MessageAttachments):
             and [tool.execution_details() for tool in self.tool_events]
             == [tool.execution_details() for tool in other.tool_events]
             and self.steering_insertions == other.steering_insertions
+        )
+
+    @property
+    def unsegmented_content(self) -> str:
+        """Return the answer for records without root text blocks."""
+        return (
+            ""
+            if any(block.depth == 0 for block in self.content_blocks)
+            else self.content
+        )
+
+    def with_recorded_execution(self, recorded: ChatMessage) -> ChatMessage:
+        """Add the recorded history and merge updates into the live tool invocations."""
+        tools: list[ToolEvent] = []
+        for event in (*self.tool_events, *recorded.tool_events):
+            record_tool_event(tools, event)
+        return self.model_copy(
+            update={
+                "tool_events": tools,
+                "raw_history": recorded.raw_history,
+                "model_context": recorded.model_context,
+                "skill_history_tree": recorded.skill_history_tree,
+            }
         )
 
     def iter_tool_events(self) -> Iterator[ToolEvent]:
@@ -363,7 +392,13 @@ class ChatMessage(MessageAttachments):
             return self.model_dump(mode="json")
         data = self.model_dump(
             mode="json",
-            exclude={"skill_history_tree", "skills", "tool_events", "reasoning_blocks"},
+            exclude={
+                "skill_history_tree",
+                "skills",
+                "tool_events",
+                "reasoning_blocks",
+                "content_blocks",
+            },
         )
         data["skills"] = [
             skill.export_data(include_history=False) for skill in self.skills
@@ -387,10 +422,26 @@ class ChatMessage(MessageAttachments):
         """Expose root invocations through the same timeline used for child skills."""
         return ordered_execution_activity(self.skills, self.tool_events, scope_path="/")
 
-    def execution_timeline(self) -> ExecutionTimeline:
+    def execution_timeline(self, *, include_stream: bool = False) -> ExecutionTimeline:
         """Expose execution order without requiring views to correlate confirmations."""
+        blocks = None
+        if include_stream:
+            reasoning = self.reasoning_blocks
+            if not reasoning and self.reasoning_content:
+                reasoning = [
+                    ReasoningBlock(
+                        id=self.id,
+                        content=self.reasoning_content,
+                        timestamp=0,
+                    )
+                ]
+            blocks = [*reasoning, *self.content_blocks]
         return ExecutionTimeline(
-            self.ordered_activity(), self.confirmed_steering_insertions()
+            self.ordered_activity(),
+            self.confirmed_steering_insertions(),
+            blocks=blocks,
+            compactions=self.model_context.compactions if self.model_context else None,
+            active_compactions=self.compaction_progress,
         )
 
     def turn_raw_history(
@@ -406,15 +457,41 @@ class ChatMessage(MessageAttachments):
             previous_history=previous_history,
         )
 
-    def append_token(self, token: str) -> None:
+    def append_token(self, token: str, *, timestamp: float | None = None) -> None:
         """End the active reasoning phase before adding visible answer content."""
+        if not token:
+            return
         self.close_reasoning()
+        if not self._receiving_content:
+            self.content_blocks.append(
+                ContentBlock(timestamp=time.time() if timestamp is None else timestamp)
+            )
+            self._receiving_content = True
+        self.content_blocks[-1].content += token
         self.content += token
 
+    def complete_content(
+        self, response: str, *, continues_stream: bool = False
+    ) -> None:
+        """Keep prior streamed blocks and reconcile the final assistant text."""
+        if not response or response == self.content:
+            return
+        if self._receiving_content or (continues_stream and self.content_blocks):
+            self.content_blocks[-1].content = response
+        elif not self.content_blocks or self.content_blocks[-1].content != response:
+            self.content_blocks.append(ContentBlock(content=response))
+        self.content = response
+
     def append_reasoning(
-        self, token: str, skill_path: str = "/", depth: int = 0
+        self,
+        token: str,
+        skill_path: str = "/",
+        depth: int = 0,
+        *,
+        timestamp: float | None = None,
     ) -> None:
         """Own reasoning segmentation instead of exposing block storage to callers."""
+        self._receiving_content = False
         self.reasoning_content += token
         if (
             self.reasoning_blocks
@@ -431,12 +508,25 @@ class ChatMessage(MessageAttachments):
                 depth=depth,
                 generation_index=len(self.reasoning_blocks) + 1,
                 content=token,
+                timestamp=time.time() if timestamp is None else timestamp,
             )
         )
 
     def add_tool_event(self, event: ToolEvent) -> None:
-        self.close_reasoning()
+        count = len(self.tool_events)
         record_tool_event(self.tool_events, event)
+        if len(self.tool_events) != count:
+            self.close_reasoning()
+            self._receiving_content = False
+
+    def set_compaction_progress(
+        self, event: DeepAgentCompactionProgressEvent, *, timestamp: float
+    ) -> None:
+        if update_compaction_activity(
+            self.compaction_progress, event, timestamp=timestamp
+        ):
+            self.close_reasoning(now=timestamp)
+            self._receiving_content = False
 
     def close_reasoning(self, *, now: float | None = None) -> None:
         for block in self.reasoning_blocks:
@@ -454,6 +544,8 @@ class ChatMessage(MessageAttachments):
     ) -> None:
         """Finalize owned reasoning, tools and skills through their lifecycle APIs."""
         current = now if now is not None else time.time()
+        self._receiving_content = False
+        self.compaction_progress.clear()
         self.close_reasoning(now=current)
         for event in self.tool_events:
             event.finalize_timing(status, now=current)
@@ -511,18 +603,32 @@ class SubAgentConversation(BaseModel):
         self.messages.append(ChatMessage(role="user", content=user_message))
         self.messages.append(ChatMessage(role="assistant", is_streaming=True))
 
-    def append_token(self, token: str) -> None:
-        self._active_assistant().append_token(token)
+    def append_token(self, token: str, *, timestamp: float | None = None) -> None:
+        self._active_assistant().append_token(token, timestamp=timestamp)
 
-    def append_reasoning(self, token: str, skill_path: str, depth: int) -> None:
-        self._active_assistant().append_reasoning(token, skill_path, depth)
+    def append_reasoning(
+        self,
+        token: str,
+        skill_path: str,
+        depth: int,
+        *,
+        timestamp: float | None = None,
+    ) -> None:
+        self._active_assistant().append_reasoning(
+            token, skill_path, depth, timestamp=timestamp
+        )
 
     def add_tool_event(self, event: ToolEvent) -> None:
         self._active_assistant().add_tool_event(event)
 
+    def set_compaction_progress(
+        self, event: DeepAgentCompactionProgressEvent, *, timestamp: float
+    ) -> None:
+        self._active_assistant().set_compaction_progress(event, timestamp=timestamp)
+
     def complete_call(self, response: str, raw_history: list[dict[str, Any]]) -> None:
         message = self._active_assistant()
-        message.content = response or message.content
+        message.complete_content(response)
         message.finish("completed")
         self.raw_history = deepcopy(raw_history)
         message.raw_history = deepcopy(raw_history)

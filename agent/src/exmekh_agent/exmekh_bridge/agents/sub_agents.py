@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+from time import time
 from typing import Any, Literal
 from uuid import uuid4
 
 from exmekh_lib.core.agents.deep_agent import (
+    DeepAgentCompactionProgressEvent,
     DeepAgentEvent,
     DeepAgentExecutionEvent,
     DeepAgentHistoryCompactionEvent,
@@ -21,6 +23,7 @@ from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.compaction import (
     HistoryArchive,
     ModelContextCheckpoint,
+    compaction_start_time,
     latest_model_context,
 )
 from exmekh_agent.exmekh_bridge.history.converter import (
@@ -35,7 +38,14 @@ from exmekh_agent.exmekh_bridge.tools.tool_feedback import ToolFeedback
 @dataclass(frozen=True, slots=True)
 class SubAgentEvent:
     action: Literal[
-        "started", "token", "reasoning", "tool", "completed", "error", "history"
+        "started",
+        "token",
+        "reasoning",
+        "tool",
+        "compaction",
+        "completed",
+        "error",
+        "history",
     ]
     id: str
     path: str
@@ -48,6 +58,8 @@ class SubAgentEvent:
     depth: int = 0
     tool_event: ToolEvent | None = None
     model_context: ModelContextCheckpoint | None = None
+    compaction_progress: DeepAgentCompactionProgressEvent | None = None
+    timestamp: float = field(default_factory=time)
 
 
 class SubAgentEventRouter:
@@ -151,7 +163,15 @@ class ObservedNode(Node):
                 )
             )
             return
-        if isinstance(event, DeepAgentStreamEvent):
+        if isinstance(event, DeepAgentCompactionProgressEvent):
+            self._archive.observe_compaction_progress(event)
+            child_event = SubAgentEvent(
+                action="compaction",
+                compaction_progress=event,
+                timestamp=compaction_start_time(event),
+                **shared,
+            )
+        elif isinstance(event, DeepAgentStreamEvent):
             provider_event = event.provider_event
             if provider_event.type == ProviderStreamEventType.RESPONSE:
                 child_event = SubAgentEvent(

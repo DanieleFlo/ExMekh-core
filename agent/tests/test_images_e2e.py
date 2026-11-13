@@ -49,7 +49,55 @@ async def test_images_pdf_preview_persistence_and_provider_protocol(image_server
             )
             await page.locator(".exmekh-image-thumbnail").first.click()
             await expect(page.locator(".exmekh-image-preview")).to_be_visible()
-            await expect(page.locator(".exmekh-preview-image img")).to_be_visible()
+            image = page.locator(".exmekh-preview-image img")
+            await expect(image).to_be_visible()
+            width = "element => element.offsetWidth"
+            fitted = await image.evaluate(width)
+            assert fitted > 0
+            reset = page.get_by_role("button", name="Reset zoom", exact=True)
+            await expect(reset).to_have_text("100%")
+            await page.get_by_role("button", name="Zoom in", exact=True).click()
+            await expect(reset).to_have_text("125%")
+            await page.wait_for_function("""() => {
+                const viewport = document.querySelector('.image-preview-viewport');
+                return viewport.scrollLeft > 0 && viewport.scrollTop > 0
+                    && viewport.scrollWidth > viewport.clientWidth
+                    && viewport.scrollHeight > viewport.clientHeight;
+            }""")
+            assert await image.evaluate(width) > fitted * 1.2
+            viewport = page.locator(".image-preview-viewport")
+            bounds = await viewport.bounding_box()
+            assert bounds is not None
+            x = bounds["x"] + bounds["width"] / 2
+            y = bounds["y"] + bounds["height"] / 2
+            position = "element => [element.scrollLeft, element.scrollTop]"
+            left, top = await viewport.evaluate(position)
+            await page.mouse.move(x, y)
+            await page.mouse.down()
+            await page.mouse.move(x + 40, y + 30, steps=5)
+            await page.mouse.up()
+            dragged = await viewport.evaluate(position)
+            assert dragged == pytest.approx([left - 40, top - 30], abs=1)
+            await page.mouse.move(x, y)
+            assert await viewport.evaluate(position) == dragged
+            zoom_out = page.get_by_role("button", name="Zoom out", exact=True)
+            await zoom_out.click()
+            await expect(reset).to_have_text("100%")
+            await zoom_out.click()
+            await expect(reset).to_have_text("75%")
+            await page.wait_for_function("""() => {
+                const viewport = document.querySelector('.image-preview-viewport');
+                return viewport.style.getPropertyValue('--image-preview-zoom') === '75%';
+            }""")
+            assert await image.evaluate(width) < fitted * 0.8
+            await reset.click()
+            await expect(reset).to_be_disabled()
+            await expect(reset).to_have_text("100%")
+            await page.wait_for_function("""() => {
+                const viewport = document.querySelector('.image-preview-viewport');
+                return viewport.scrollWidth === viewport.clientWidth
+                    && viewport.scrollHeight === viewport.clientHeight;
+            }""")
             assert (
                 await page.locator(".exmekh-image-dialog .q-dialog__backdrop").evaluate(
                     "(el) => getComputedStyle(el).backdropFilter"

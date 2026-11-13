@@ -2,6 +2,7 @@
 
 from exmekh_agent.exmekh_bridge.history.recorded_history import extract_turn_raw_history
 from exmekh_agent.exmekh_bridge.models.execution import (
+    ContentBlock,
     ProviderContextUsage,
     ReasoningBlock,
     SkillNode,
@@ -32,6 +33,7 @@ __all__ = [
     "ToolInvocationKey",
     "record_tool_event",
     "ReasoningBlock",
+    "ContentBlock",
     "SkillNode",
     "ProviderContextUsage",
     "QueuedMessage",

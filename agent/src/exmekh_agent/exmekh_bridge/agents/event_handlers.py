@@ -31,7 +31,7 @@ from exmekh_agent.exmekh_bridge.tools.tool_events import tool_event_from_executi
 logger = logging.getLogger(__name__)
 
 
-def scoped_reasoning_callback(
+def scoped_stream_callback(
     callback: Callable[..., None],
 ) -> Callable[[str, str, int], None]:
     """Adapt legacy one-argument observers before calling them, never by retrying.
@@ -49,6 +49,10 @@ def scoped_reasoning_callback(
         signature.bind("")
         return lambda content, _path, _depth: callback(content)
     return callback
+
+
+# Keep the existing reasoning callback API for other stream observers.
+scoped_reasoning_callback = scoped_stream_callback
 
 
 def publish_raw_history(
@@ -72,7 +76,7 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
     def __init__(
         self,
         event_router: SubAgentEventRouter,
-        on_token: Callable[[str], None],
+        on_token: Callable[..., None],
         on_reasoning: Callable[..., None],
         on_tool_event: Callable[[ToolEvent], None],
         on_skill_event: Callable[[SkillNode, str], None] | None,
@@ -85,8 +89,8 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
         | None = None,
     ) -> None:
         self.event_router = event_router
-        self.on_token = on_token
-        self.on_reasoning = scoped_reasoning_callback(on_reasoning)
+        self.on_token = scoped_stream_callback(on_token)
+        self.on_reasoning = scoped_stream_callback(on_reasoning)
         self.on_tool_event = on_tool_event
         self.on_skill_event = on_skill_event
         self.on_raw_history = on_raw_history
@@ -144,7 +148,8 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
 
     def handle(self, event: DeepAgentEvent) -> None:
         if isinstance(event, DeepAgentCompactionProgressEvent):
-            if self.on_compaction_progress:
+            if not self.event_router.route(event) and self.on_compaction_progress:
+                self._current_skill_for(event.skill_path, event.depth)
                 self.on_compaction_progress(event)
             return
         if isinstance(event, DeepAgentHistoryCompactionEvent):
@@ -180,7 +185,7 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
             provider_event.type == ProviderStreamEventType.RESPONSE
             and provider_event.content
         ):
-            self.on_token(provider_event.content)
+            self.on_token(provider_event.content, event.skill_path, event.depth)
 
     def _record_steering_insertion(self, event: DeepAgentStreamEvent) -> None:
         if self.steering is None:

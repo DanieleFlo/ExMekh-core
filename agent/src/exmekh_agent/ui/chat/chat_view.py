@@ -9,12 +9,15 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Literal
 
-from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
 from nicegui import ui
 
 from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.execution import DEFAULTS as EXECUTION_DEFAULTS
+from exmekh_agent.exmekh_bridge.history.compaction import (
+    CompactionActivity,
+    RecordedCompaction,
+)
 from exmekh_agent.exmekh_bridge.history.message_attachments import (
     attached_files,
     saved_images,
@@ -22,6 +25,7 @@ from exmekh_agent.exmekh_bridge.history.message_attachments import (
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
+    ContentBlock,
     ExecutionTimeline,
     QueuedMessage,
     ReasoningBlock,
@@ -31,15 +35,19 @@ from exmekh_agent.exmekh_bridge.models import (
     ToolInvocationKey,
     record_tool_event,
 )
+from exmekh_agent.exmekh_bridge.models.execution import record_skill_snapshot
+from exmekh_agent.exmekh_bridge.models.timeline import Activity
 from exmekh_agent.exmekh_bridge.providers.context_usage import (
     compute_skill_node_closure_tokens,
     format_skill_closure_tokens,
     populate_skill_closure_tokens,
 )
-from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import SessionManager, session_manager
 from exmekh_agent.ui.chat.chat_export import ExportFormat, export_chat
-from exmekh_agent.ui.chat.compaction_progress import CompactionProgressView
+from exmekh_agent.ui.chat.compaction_progress import (
+    CompactionProgressView,
+    render_applied_compaction,
+)
 from exmekh_agent.ui.chat.image_attachment import render_image_attachment
 from exmekh_agent.ui.chat.image_progress import ImageProgressView
 from exmekh_agent.ui.chat.message_editor import EditMessageCallback, MessageEditor
@@ -75,28 +83,15 @@ def load_chat_scroll_js() -> None:
         ui.add_head_html(f"<script>\n{js_content}\n</script>")
 
 
-def _upsert_streaming_skill(
-    skills: list[SkillNode], incoming: SkillNode, action: str
-) -> SkillNode | None:
-    """Return the merged skill when its rendered structure remains the same."""
-    incoming.finalize_timing(action if action in ("completed", "error") else None)
-
-    for root in reversed(skills):
-        existing = root.find_invocation(incoming.path, incoming.opening_tool_call_id)
-        if existing is not None:
-            before = existing.execution_details()
-            existing.merge_snapshot(incoming)
-            return existing if before == existing.execution_details() else None
-
-    if incoming.depth <= 1 or not skills:
-        skills.append(incoming)
-        return None
-
-    for existing in skills:
-        if existing.attach_descendant(incoming):
-            return None
-    skills.append(incoming)
-    return None
+def _unconfirmed_steering(
+    message: ChatMessage, insertions: list[SteeringInsertion]
+) -> list[QueuedMessage]:
+    confirmed = {insertion.message_id for insertion in insertions}
+    return [
+        guidance
+        for guidance in message.steering_messages
+        if guidance.id not in confirmed
+    ]
 
 
 class ChatViewComponent:
@@ -122,30 +117,32 @@ class ChatViewComponent:
         self.stream_session_id: str | None = None
         self.current_stream_card: ui.row | None = None
         self.current_steering_container: ui.column | None = None
-        self.streaming_steering_ids: set[str] = set()
+        self._pending_steering: list[QueuedMessage] = []
+        self._streaming_steering_messages: list[QueuedMessage] = []
         self.streaming_steering_insertions: list[SteeringInsertion] = []
-        self.streaming_steering_spinners: dict[str, ui.spinner] = {}
         self._rendering_timeline: ExecutionTimeline | None = None
-        self.current_html: ui.html | None = None
         self.current_response_text: str = ""
         self.stream_started_at: float | None = None
         self.stream_duration_label: ui.label | None = None
         self.stream_timer: ui.timer | None = None
-        self.compaction_progress_view: CompactionProgressView | None = None
+        self.streaming_compactions: list[CompactionActivity] = []
+        self.live_compaction_views: dict[str, CompactionProgressView] = {}
         self.current_thinking_label: ui.html | None = None
         self.current_live_reasoning_timer_label: ui.label | None = None
         self.current_loading_placeholder: ui.row | None = None
-        self.current_reasoning_container: ui.column | None = None
         self.current_live_reasoning_container: ui.column | None = None
         self.current_live_reasoning_block: ReasoningBlock | None = None
-        self.current_skills_container: ui.column | None = None
+        self.current_activity_container: ui.column | None = None
         self.streaming_reasoning_blocks: list[ReasoningBlock] = []
+        self.streaming_content_blocks: list[ContentBlock] = []
+        self.current_content_block: ContentBlock | None = None
+        self.live_content_elements: dict[str, ui.html] = {}
         self.streaming_skills: list[SkillNode] = []
-        self.streaming_root_tools: list[ToolEvent] = []
+        self.streaming_tools: list[ToolEvent] = []
         self.live_skill_timer_labels: list[tuple[SkillNode, ui.label]] = []
         self.live_tool_timer_labels: list[tuple[ToolEvent, ui.label]] = []
         self.image_progress_views: dict[ToolInvocationKey, list[ImageProgressView]] = {}
-        self.current_master_reasoning_expansion: ui.expansion | None = None
+        self._rendering_live_activity = False
         self.active_tab: str = "chat"
         self.selected_sub_agent_id: str | None = None
         self.path_label: ui.label | None = None
@@ -768,19 +765,18 @@ class ChatViewComponent:
             )
 
     def _render_message(self, msg: ChatMessage) -> None:
-        for guidance in msg.steering_messages:
+        self._render_message_body(msg)
+        for guidance in _unconfirmed_steering(msg, msg.confirmed_steering_insertions()):
             self._render_message_body(
                 guidance.to_chat_message(),
-                steering=True,
+                steering="unconfirmed",
             )
-        self._render_message_body(msg)
 
     def _render_message_body(
         self,
         msg: ChatMessage,
         *,
-        steering: bool = False,
-        pending_steering: bool = False,
+        steering: Literal["pending", "confirmed", "unconfirmed"] | None = None,
     ) -> None:
         if msg.role == "user":
             images = saved_images(msg)
@@ -810,9 +806,13 @@ class ChatViewComponent:
                                 UI_PRESENTATION["render_message_body.icon.alt_route"],
                                 size=UI_PRESENTATION["render_message_body.size.13px"],
                             )
-                            ui.label(ui_text("chat.chat_view.steering"))
-                            if pending_steering:
-                                spinner = ui.spinner(
+                            ui.label(
+                                ui_text("chat.chat_view.steering_unconfirmed")
+                                if steering == "unconfirmed"
+                                else ui_text("chat.chat_view.steering")
+                            )
+                            if steering == "pending":
+                                ui.spinner(
                                     size=UI_PRESENTATION[
                                         "render_message_body.size.11px"
                                     ],
@@ -823,13 +823,11 @@ class ChatViewComponent:
                                     UI_PRESENTATION[
                                         "render_message_body.classes.steering_loading_spinner"
                                     ]
-                                )
-                                spinner.tooltip(
+                                ).tooltip(
                                     ui_text(
                                         "chat.chat_view.pending_waiting_to_be_inserted_into_history"
                                     )
                                 )
-                                self.streaming_steering_spinners[msg.id] = spinner
                     display_text = message_display_text(msg)
 
                     if display_text:
@@ -978,33 +976,10 @@ class ChatViewComponent:
                             ui.label(
                                 ui_text("chat.chat_view.generation_stopped_by_user")
                             )
-                    # Thinking Blocks (Reasoning separated by generation and path)
-                    reasoning_blocks = msg.reasoning_blocks
-                    if not reasoning_blocks and msg.reasoning_content:
-                        reasoning_blocks = [
-                            ReasoningBlock(
-                                skill_path="/",
-                                depth=0,
-                                generation_index=1,
-                                content=msg.reasoning_content,
-                            )
-                        ]
-
-                    if reasoning_blocks:
-                        with ui.column().classes(
-                            UI_PRESENTATION[
-                                "render_message_body.classes.w_full_gap_1_reasoning_blocks_container"
-                            ]
-                        ):
-                            self._render_reasoning_group(reasoning_blocks)
-
-                    # Hierarchical Skills & Nested Blocks
                     with ui.column().classes(
                         UI_PRESENTATION["render_message_body.classes.w_full_gap_2"]
                     ):
-                        self._render_turn_activity(
-                            msg,
-                        )
+                        self._render_turn_activity(msg)
                     for index, url in enumerate(msg.unplaced_images()):
                         with ui.column().classes(
                             UI_PRESENTATION["image_generation.classes.slot"]
@@ -1013,13 +988,8 @@ class ChatViewComponent:
                                 url, index, msg.image_gallery()
                             )
 
-                    # Response Parsed HTML (with LaTeX MathML support)
-                    if msg.content:
-                        ui.html(parse_markdown_to_html(msg.content)).classes(
-                            UI_PRESENTATION[
-                                "render_message_body.classes.text_sm_text_zinc_200_leading_relaxed_parsed_"
-                            ]
-                        )
+                    if msg.unsegmented_content:
+                        self._render_response_text(msg.unsegmented_content)
 
                     # Footer actions
                     with ui.row().classes(
@@ -1057,263 +1027,95 @@ class ChatViewComponent:
                                 UI_PRESENTATION["split.classes"]
                             ).tooltip(ui_text("chat.split.button"))
 
-    def _render_reasoning_group(self, blocks: list[ReasoningBlock]) -> ui.expansion:
-        """Renders multiple reasoning blocks compacted into a single expandable row,
-        which expands to reveal the individual sub-blocks, each individually expandable.
-        """
-        count = len(blocks)
-        total_duration = sum(b.elapsed_seconds() for b in blocks)
-        expansion_key = f"reasoning:{blocks[0].id}"
-        with ui.expansion(
-            "",
-            value=self._disclosures.is_expanded(expansion_key),
-            on_value_change=lambda event: self._disclosures.set_expanded(
-                expansion_key, event.value
-            ),
-        ).classes(
-            UI_PRESENTATION[
-                "render_reasoning_group.classes.w_full_reasoning_master_expansion_reasoning_e"
-            ]
-        ) as master_exp:
-            with master_exp.add_slot("header"):
-                with ui.row().classes(
-                    UI_PRESENTATION[
-                        "render_reasoning_group.classes.reasoning_master_header_items_center_justify_"
-                    ]
-                ):
-                    with ui.row().classes(
-                        UI_PRESENTATION[
-                            "render_reasoning_group.classes.items_center_gap_2"
-                        ]
-                    ):
-                        ui.icon(
-                            UI_PRESENTATION["render_reasoning_group.icon.psychology"],
-                            size=UI_PRESENTATION["render_reasoning_group.size.xs"],
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_reasoning_group.classes.text_zinc_400"
-                            ]
-                        )
-                        ui.label(ui_text("chat.chat_view.reasoning_process")).classes(
-                            UI_PRESENTATION[
-                                "render_reasoning_group.classes.font_mono_text_zinc_300_text_xs_font_medium"
-                            ]
-                        )
-                        ui.label(
-                            ui_text(
-                                "chat.chat_view.value",
-                                value_1=count,
-                                value_2=app_text("chat.chat_view.block")
-                                if count == 1
-                                else app_text("chat.chat_view.blocks"),
-                            )
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_reasoning_group.classes.font_mono_text_11px_text_zinc_400_reasoning_c"
-                            ]
-                        )
-                    with ui.row().classes(
-                        UI_PRESENTATION[
-                            "render_reasoning_group.classes.items_center_gap_2_font_mono_text_11px_text_z"
-                        ]
-                    ):
-                        if count > 1:
-                            unique_paths = list(
-                                dict.fromkeys(b.skill_path for b in blocks)
-                            )
-                            if len(unique_paths) > 1:
-                                paths_str = ", ".join(
-                                    p
-                                    if p != "/"
-                                    else ui_text("chat.chat_view.steering_root")
-                                    for p in unique_paths
-                                )
-                                ui.label(paths_str).classes(
-                                    UI_PRESENTATION[
-                                        "render_reasoning_group.classes.text_zinc_500_text_10px"
-                                    ]
-                                )
-                        ui.label(format_duration(total_duration)).classes(
-                            UI_PRESENTATION[
-                                "render_reasoning_group.classes.message_time_text_10px_font_mono"
-                            ]
-                        )
-
-            with (
-                master_exp,
-                ui.column().classes(
-                    UI_PRESENTATION[
-                        "render_reasoning_group.classes.w_full_pl_2_5_py_1_5_gap_1_5_border_l_border_"
-                    ]
+    def _render_reasoning_block(self, block: ReasoningBlock) -> ui.expansion:
+        expansion_key = f"reasoning:{block.id}"
+        with (
+            ui.expansion(
+                "",
+                value=self._disclosures.is_expanded(expansion_key),
+                on_value_change=lambda event: self._disclosures.set_expanded(
+                    expansion_key, event.value
                 ),
-            ):
-                for block in blocks:
-                    self._render_reasoning_sub_block(block)
+            )
+            .props(UI_PRESENTATION["render_reasoning_block.props"])
+            .classes(UI_PRESENTATION["render_reasoning_block.classes.expansion"])
+        ) as expansion:
+            with expansion.add_slot("header"):
+                self._render_reasoning_header(block)
+            ui.html(parse_markdown_to_html(block.content)).classes(
+                UI_PRESENTATION["reasoning_text.classes"]
+            )
+        return expansion
 
-            return master_exp
-
-    def _render_reasoning_sub_block(self, block: ReasoningBlock) -> ui.expansion:
-        """Renders an individual reasoning sub-block with its path/gen badges and timer,
-        expandable with a click to display its full thinking content.
-        """
-        block_duration = block.elapsed_seconds()
-        expansion_key = f"reasoning-block:{block.id}"
-        with ui.expansion(
-            "",
-            value=self._disclosures.is_expanded(expansion_key),
-            on_value_change=lambda event: self._disclosures.set_expanded(
-                expansion_key, event.value
-            ),
-        ).classes(
-            UI_PRESENTATION[
-                "render_reasoning_sub_block.classes.w_full_reasoning_sub_block_text_xs"
-            ]
-        ) as sub_exp:
-            with sub_exp.add_slot("header"):
-                with ui.row().classes(
-                    UI_PRESENTATION[
-                        "render_reasoning_sub_block.classes.reasoning_header_reasoning_sub_header_items_c"
-                    ]
-                ):
-                    with ui.row().classes(
-                        UI_PRESENTATION[
-                            "render_reasoning_sub_block.classes.items_center_gap_2"
-                        ]
-                    ):
-                        ui.icon(
-                            UI_PRESENTATION[
-                                "render_reasoning_sub_block.icon.subdirectory_arrow_right"
-                            ],
-                            size=UI_PRESENTATION["render_reasoning_sub_block.size.xs"],
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_reasoning_sub_block.classes.text_zinc_500"
-                            ]
-                        )
-                        ui.label(
-                            ui_text(
-                                "chat.chat_view.step_formatted",
-                                block_generation_index=block.generation_index,
-                            )
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_reasoning_sub_block.classes.font_mono_text_zinc_400_text_xs_font_medium"
-                            ]
-                        )
-                        ui.label(block.skill_path).classes(
-                            UI_PRESENTATION[
-                                "render_reasoning_sub_block.classes.font_mono_text_11px_text_zinc_400_reasoning_p"
-                            ]
-                        )
-                    with ui.row().classes(
-                        UI_PRESENTATION[
-                            "render_reasoning_sub_block.classes.items_center_gap_2_font_mono_text_11px_text_z"
-                        ]
-                    ):
-                        if block.depth > 0:
-                            ui.label(
-                                ui_text("chat.chat_view.depth", depth=block.depth)
-                            ).classes(
-                                UI_PRESENTATION[
-                                    "render_reasoning_sub_block.classes.text_zinc_500"
-                                ]
-                            )
-                        ui.label(
-                            ui_text(
-                                "chat.chat_view.gen",
-                                block_generation_index=block.generation_index,
-                            )
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_reasoning_sub_block.classes.text_zinc_500_reasoning_gen_badge"
-                            ]
-                        )
-                        ui.label(format_duration(block_duration)).classes(
-                            UI_PRESENTATION[
-                                "render_reasoning_sub_block.classes.message_time_text_10px_font_mono"
-                            ]
-                        )
-
-            with sub_exp:
-                ui.html(parse_markdown_to_html(block.content)).classes(
-                    UI_PRESENTATION[
-                        "render_reasoning_sub_block.classes.thinking_box_whitespace_pre_wrap_w_full_font_"
-                    ]
+    def _render_reasoning_header(
+        self, block: ReasoningBlock, *, live: bool = False
+    ) -> ui.label:
+        style = (
+            "render_streaming_reasoning.classes.header"
+            if live
+            else "render_reasoning_block.classes.header"
+        )
+        with ui.row().classes(UI_PRESENTATION[style]):
+            with ui.row().classes(UI_PRESENTATION["execution_row.main"]):
+                if live:
+                    ui.spinner(
+                        UI_PRESENTATION["execution_row.spinner"],
+                        size=UI_PRESENTATION["execution_row.icon_size"],
+                        color=UI_PRESENTATION["execution_row.spinner_color"],
+                    )
+                else:
+                    ui.icon(
+                        UI_PRESENTATION["render_reasoning_block.icon.psychology"],
+                        size=UI_PRESENTATION["execution_row.icon_size"],
+                    ).classes(UI_PRESENTATION["execution_row.icon_classes"])
+                ui.label(
+                    ui_text(
+                        "chat.chat_view.reasoning_in_progress"
+                        if live
+                        else "chat.chat_view.reasoning_process"
+                    )
+                ).classes(UI_PRESENTATION["execution_row.title"])
+            with ui.row().classes(UI_PRESENTATION["execution_row.meta"]):
+                return ui.label(format_duration(block.elapsed_seconds())).classes(
+                    UI_PRESENTATION["execution_row.duration"]
                 )
-
-            return sub_exp
 
     def _render_skill_node(self, node: SkillNode) -> None:
-        depth_level = min(max(node.depth, 1), 3)
-        depth_class = f"skill-depth-{depth_level}"
-
         if node.status == "active":
-            # Active state: seamless container with subtle guideline and live skill timer
             with ui.column().classes(
-                UI_PRESENTATION["render_skill_node.classes_template"].format(
-                    depth_class=depth_class
-                )
+                UI_PRESENTATION["render_skill_node.classes.active_container"]
             ):
                 with ui.row().classes(
-                    UI_PRESENTATION[
-                        "render_skill_node.classes.items_center_justify_between_w_full"
-                    ]
+                    UI_PRESENTATION["render_skill_node.classes.active_header"]
                 ):
-                    with ui.row().classes(
-                        UI_PRESENTATION["render_skill_node.classes.items_center_gap_2"]
-                    ):
+                    with ui.row().classes(UI_PRESENTATION["execution_row.main"]):
                         ui.icon(
                             UI_PRESENTATION["render_skill_node.icon.hub"],
-                            size=UI_PRESENTATION["render_skill_node.size.xs"],
-                        ).classes(
-                            UI_PRESENTATION["render_skill_node.classes.text_zinc_400"]
-                        )
+                            size=UI_PRESENTATION["execution_row.icon_size"],
+                        ).classes(UI_PRESENTATION["execution_row.icon_classes"])
                         ui.label(
                             ui_text("chat.chat_view.active_skill", node_path=node.path)
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_skill_node.classes.font_mono_font_medium_text_zinc_200_text_xs"
-                            ]
-                        )
-                    with ui.row().classes(
-                        UI_PRESENTATION["render_skill_node.classes.items_center_gap_2"]
-                    ):
-                        ui.label(
-                            ui_text("chat.chat_view.depth", depth=node.depth)
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_skill_node.classes.text_10px_font_mono_text_zinc_500"
-                            ]
-                        )
-                        skill_timer_lbl = ui.label(
-                            format_duration(node.elapsed_seconds())
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_skill_node.classes.message_time_text_10px_font_mono"
-                            ]
-                        )
-                        self.live_skill_timer_labels.append((node, skill_timer_lbl))
+                        ).classes(UI_PRESENTATION["execution_row.title"])
+                    with ui.row().classes(UI_PRESENTATION["execution_row.meta"]):
+                        ui.label(ui_text("chat.chat_view.depth", depth=node.depth))
                         with ui.row().classes(
                             UI_PRESENTATION[
                                 "render_skill_node.classes.skill_active_badge_text_10px_font_mono_items_"
                             ]
                         ):
                             ui.spinner(
-                                UI_PRESENTATION["render_skill_node.spinner.dots"],
-                                size=UI_PRESENTATION["render_skill_node.size.xs"],
-                                color=UI_PRESENTATION["render_skill_node.color.grey_5"],
+                                UI_PRESENTATION["execution_row.spinner"],
+                                size=UI_PRESENTATION["execution_row.icon_size"],
+                                color=UI_PRESENTATION["execution_row.spinner_color"],
                             )
                             ui.label(ui_text("chat.chat_view.running"))
-
-                # Render reasoning blocks inside this skill if present
-                if node.reasoning_blocks:
-                    with ui.column().classes(
-                        UI_PRESENTATION["render_skill_node.classes.w_full_gap_1_pl_2"]
-                    ):
-                        self._render_reasoning_group(node.reasoning_blocks)
+                        timer = ui.label(
+                            format_duration(node.elapsed_seconds())
+                        ).classes(UI_PRESENTATION["execution_row.duration"])
+                        self.live_skill_timer_labels.append((node, timer))
 
                 with ui.column().classes(
-                    UI_PRESENTATION["render_skill_node.classes.w_full_gap_2_pl_2"]
+                    UI_PRESENTATION["render_skill_node.classes.active_body"]
                 ):
                     self._render_skill_activity(node)
 
@@ -1323,46 +1125,42 @@ class ChatViewComponent:
             output_key = f"skill-output:{node.id}"
             # Completed state: seamless accordion header with open-to-close skill timer
             with ui.column().classes(
-                UI_PRESENTATION["render_skill_node.classes_template_2"].format(
-                    depth_class=depth_class
-                )
+                UI_PRESENTATION["render_skill_node.classes.finished_container"]
             ):
                 body_ref: ui.column | None = None
                 chevron_ref: ui.icon | None = None
 
                 # Compacted clickable bar
-                with ui.row().classes(
-                    UI_PRESENTATION[
-                        "render_skill_node.classes.skill_compact_header_items_center_justify_bet"
-                    ]
+                with (
+                    ui.row()
+                    .classes(
+                        UI_PRESENTATION["render_skill_node.classes.finished_header"]
+                    )
+                    .classes(
+                        UI_PRESENTATION["render_skill_node.classes.error_header"]
+                        if node.status == "error"
+                        else UI_PRESENTATION[
+                            "render_skill_node.classes.completed_header"
+                        ]
+                    )
                 ) as header:
-                    with ui.row().classes(
-                        UI_PRESENTATION["render_skill_node.classes.items_center_gap_2"]
-                    ):
+                    with ui.row().classes(UI_PRESENTATION["execution_row.main"]):
                         ui.icon(
-                            "error" if node.status == "error" else "check_circle",
-                            size=UI_PRESENTATION["render_skill_node.size.xs"],
-                        ).classes(
-                            UI_PRESENTATION["render_skill_node.state_classes"]
+                            UI_PRESENTATION["render_skill_node.icon.error"]
                             if node.status == "error"
-                            else UI_PRESENTATION["render_skill_node.state_classes_2"]
+                            else UI_PRESENTATION["render_skill_node.icon.completed"],
+                            size=UI_PRESENTATION["execution_row.icon_size"],
+                        ).classes(
+                            UI_PRESENTATION["render_skill_node.classes.status_icon"]
                         )
                         ui.label(
                             ui_text("chat.chat_view.skill", node_name=node.name)
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_skill_node.classes.font_mono_font_medium_text_zinc_300_text_xs"
-                            ]
-                        )
+                        ).classes(UI_PRESENTATION["execution_row.title"])
                         ui.label(node.path).classes(
-                            UI_PRESENTATION[
-                                "render_skill_node.classes.text_11px_text_zinc_500_font_mono"
-                            ]
+                            UI_PRESENTATION["render_skill_node.classes.path"]
                         )
 
-                    with ui.row().classes(
-                        UI_PRESENTATION["render_skill_node.classes.items_center_gap_2"]
-                    ):
+                    with ui.row().classes(UI_PRESENTATION["execution_row.meta"]):
                         if not node.tokens_pending:
                             before_tok, after_tok = compute_skill_node_closure_tokens(
                                 node
@@ -1399,47 +1197,25 @@ class ChatViewComponent:
                                 "chat.chat_view.actions",
                                 node_action_count=node.action_count,
                             )
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_skill_node.classes.text_11px_font_mono_text_zinc_500"
-                            ]
                         )
-                        ui.label(
-                            ui_text("chat.chat_view.depth", depth=node.depth)
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_skill_node.classes.text_11px_font_mono_text_zinc_500"
-                            ]
-                        )
-                        ui.label(format_duration(node.elapsed_seconds())).classes(
-                            UI_PRESENTATION[
-                                "render_skill_node.classes.message_time_text_10px_font_mono"
-                            ]
-                        )
+                        ui.label(ui_text("chat.chat_view.depth", depth=node.depth))
                         chevron_ref = ui.icon(
                             "expand_less" if expanded else "expand_more",
-                            size=UI_PRESENTATION["render_skill_node.size.xs"],
+                            size=UI_PRESENTATION["execution_row.icon_size"],
                         ).classes(
                             UI_PRESENTATION[
                                 "render_skill_node.classes.text_zinc_500_transition_transform_duration_2"
                             ]
                         )
+                        ui.label(format_duration(node.elapsed_seconds())).classes(
+                            UI_PRESENTATION["execution_row.duration"]
+                        )
 
                 # Collapsible body containing all actions and nested sub-skills
                 with ui.column().classes(
-                    UI_PRESENTATION["render_skill_node.classes.w_full_py_2_pl_3_gap_2"]
+                    UI_PRESENTATION["render_skill_node.classes.finished_body"]
                 ) as body:
                     body_ref = body
-
-                    if node.reasoning_blocks:
-                        ui.label(
-                            ui_text("chat.chat_view.reasoning_within_skill")
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_skill_node.classes.text_11px_text_zinc_500_font_mono"
-                            ]
-                        )
-                        self._render_reasoning_group(node.reasoning_blocks)
 
                     self._render_skill_activity(node)
                     with (
@@ -1506,29 +1282,51 @@ class ChatViewComponent:
 
     def _render_scope_activity(
         self,
-        activities: list[SkillNode | ToolEvent | SteeringInsertion],
+        activities: Iterable[Activity],
         *,
         node: SkillNode | None = None,
     ) -> None:
         for activity in activities:
+            if isinstance(activity, ReasoningBlock):
+                if self._rendering_live_activity and activity.end_time is None:
+                    self._render_streaming_reasoning(activity)
+                else:
+                    self._render_reasoning_block(activity)
+                continue
+            if isinstance(activity, ContentBlock):
+                element = self._render_response_text(activity.content)
+                if self._rendering_live_activity:
+                    self.live_content_elements[activity.id] = element
+                continue
             if isinstance(activity, SteeringInsertion):
                 self._render_steering_insertion(activity)
                 continue
-            is_skill = isinstance(activity, SkillNode)
-            if node is not None and node.status != "active":
-                ui.label(
-                    app_text("chat.chat_view.nested_sub_skills")
-                    if is_skill
-                    else app_text("chat.chat_view.actions_executed_in_skill")
-                ).classes(
-                    UI_PRESENTATION[
-                        "render_skill_activity.classes.text_11px_text_zinc_500_font_mono"
-                    ]
-                )
-            if is_skill:
+            if isinstance(activity, CompactionActivity):
+                if isinstance(activity.source, RecordedCompaction):
+                    render_applied_compaction(activity.source)
+                else:
+                    view = CompactionProgressView()
+                    view.show([activity.source])
+                    if self._rendering_live_activity:
+                        self.live_compaction_views[activity.id] = view
+                continue
+            if isinstance(activity, SkillNode):
+                if node is not None and node.status != "active":
+                    ui.label(app_text("chat.chat_view.nested_sub_skills")).classes(
+                        UI_PRESENTATION[
+                            "render_skill_activity.classes.text_11px_text_zinc_500_font_mono"
+                        ]
+                    )
                 self._render_skill_node(activity)
             else:
                 self._render_tool_event(activity)
+
+    def _render_response_text(self, content: str) -> ui.html:
+        return ui.html(parse_markdown_to_html(content)).classes(
+            UI_PRESENTATION[
+                "render_message_body.classes.text_sm_text_zinc_200_leading_relaxed_parsed_"
+            ]
+        )
 
     def _render_output_panel(
         self, call_id: str | None, *, skill: bool = False
@@ -1555,45 +1353,56 @@ class ChatViewComponent:
                 )
         return panel
 
+    def _render_tool_parameters(self, event: ToolEvent, arguments_json: str) -> None:
+        expansion_key = f"tool-parameters:{event.id}"
+        with (
+            ui.expansion(
+                ui_text("chat.chat_view.tool_parameters"),
+                icon=UI_PRESENTATION["tool_parameters.icon"],
+                value=self._disclosures.is_expanded(expansion_key),
+                on_value_change=lambda change: self._disclosures.set_expanded(
+                    expansion_key, change.value
+                ),
+            )
+            .props(UI_PRESENTATION["tool_parameters.props"])
+            .classes(UI_PRESENTATION["tool_parameters.classes"])
+        ):
+            ui.html(format_output_html(arguments_json)).classes(
+                UI_PRESENTATION["tool_parameters.body_classes"]
+            )
+
     def _render_tool_event(self, ev: ToolEvent) -> None:
         if self._rendering_message is not None:
             ev = self._rendering_message.display_tool(ev)
         is_running = ev.is_running
+        arguments = (
+            self._rendering_message.arguments_for_tool(ev)
+            if self._rendering_message is not None
+            else ev.arguments
+        )
+        arguments_json = (
+            json.dumps(arguments, ensure_ascii=False, indent=2) if arguments else ""
+        )
         with ui.row().classes(
             UI_PRESENTATION[
                 "render_tool_event.classes.tool_event_card_w_full_items_center_justify_b"
             ]
         ) as tool_row:
-            with ui.row().classes(
-                UI_PRESENTATION[
-                    "render_tool_event.classes.tool_event_main_items_center_gap_2"
-                ]
-            ):
+            with ui.row().classes(UI_PRESENTATION["execution_row.main"]):
                 if is_running:
                     ui.spinner(
-                        UI_PRESENTATION["render_tool_event.spinner.dots"],
-                        size=UI_PRESENTATION["render_tool_event.size.xs"],
-                        color=UI_PRESENTATION["render_tool_event.color.grey_5"],
+                        UI_PRESENTATION["execution_row.spinner"],
+                        size=UI_PRESENTATION["execution_row.icon_size"],
+                        color=UI_PRESENTATION["execution_row.spinner_color"],
                     )
                 else:
                     ui.icon(
                         UI_PRESENTATION["render_tool_event.icon.terminal"],
-                        size=UI_PRESENTATION["render_tool_event.size.xs"],
-                    ).classes(
-                        UI_PRESENTATION["render_tool_event.classes.text_zinc_500"]
-                    )
+                        size=UI_PRESENTATION["execution_row.icon_size"],
+                    ).classes(UI_PRESENTATION["execution_row.icon_classes"])
                 ui.label(
                     ui_text("chat.chat_view.tool", ev_tool_name=ev.tool_name)
-                ).classes(
-                    UI_PRESENTATION[
-                        "render_tool_event.classes.tool_event_name_font_mono_font_medium_text_zi"
-                    ]
-                )
-                arguments = (
-                    self._rendering_message.arguments_for_tool(ev)
-                    if self._rendering_message is not None
-                    else ev.arguments
-                )
+                ).classes(UI_PRESENTATION["execution_row.title"])
                 if arguments:
                     argument_preview = []
                     for name, value in arguments.items():
@@ -1611,12 +1420,8 @@ class ChatViewComponent:
                         UI_PRESENTATION[
                             "render_tool_event.classes.tool_arguments_preview_font_mono_text_xs"
                         ]
-                    ).tooltip(json.dumps(arguments, ensure_ascii=False, indent=2))
-            with ui.row().classes(
-                UI_PRESENTATION[
-                    "render_tool_event.classes.tool_event_meta_items_center_gap_2_text_11px_"
-                ]
-            ):
+                    ).tooltip(arguments_json)
+            with ui.row().classes(UI_PRESENTATION["execution_row.meta"]):
                 if ev.approval_state:
                     ui.icon(UI_PRESENTATION["approval.icon"], size="xs").classes(
                         UI_PRESENTATION["approval.classes_template"].format(
@@ -1626,7 +1431,7 @@ class ChatViewComponent:
                 if not is_running:
                     ui.icon(
                         "error" if ev.execution_status == "error" else "check_circle",
-                        size=UI_PRESENTATION["render_tool_event.size.xs"],
+                        size=UI_PRESENTATION["execution_row.icon_size"],
                     ).classes(
                         UI_PRESENTATION["render_tool_event.state_classes"]
                         if ev.execution_status == "error"
@@ -1640,15 +1445,14 @@ class ChatViewComponent:
                 ui.label(ui_text("chat.chat_view.path", ev_skill_path=ev.skill_path))
                 tool_timer_lbl = ui.label(
                     format_duration(ev.elapsed_seconds())
-                ).classes(
-                    UI_PRESENTATION[
-                        "render_tool_event.classes.message_time_text_10px_font_mono"
-                    ]
-                )
+                ).classes(UI_PRESENTATION["execution_row.duration"])
                 if is_running:
                     self.live_tool_timer_labels.append((ev, tool_timer_lbl))
         if not is_running:
-            panel = self._render_output_panel(ev.tool_call_id)
+            with ui.column().classes(UI_PRESENTATION["tool_details.classes"]) as panel:
+                if arguments_json:
+                    self._render_tool_parameters(ev, arguments_json)
+                self._render_output_panel(ev.tool_call_id)
             tool_row.classes(
                 UI_PRESENTATION["render_tool_event.classes.tool_output_toggle"]
             )
@@ -1723,15 +1527,19 @@ class ChatViewComponent:
                 f'aria-label="{label}"'
             ).classes(UI_PRESENTATION["image_generation.attach_classes"]).tooltip(label)
 
-    def _render_turn_activity(self, message: ChatMessage) -> None:
+    def _render_turn_activity(
+        self, message: ChatMessage, *, live: bool = False
+    ) -> None:
         """Render the model's timeline identically during streaming and after reload."""
-        self._rendering_timeline = message.execution_timeline()
+        self._rendering_timeline = message.execution_timeline(include_stream=True)
         self._rendering_message = message
+        self._rendering_live_activity = live
         try:
             self._render_scope_activity(self._rendering_timeline.root_activity())
         finally:
             self._rendering_timeline = None
             self._rendering_message = None
+            self._rendering_live_activity = False
 
     def _render_steering_insertion(self, insertion: SteeringInsertion) -> None:
         location = (
@@ -1745,13 +1553,11 @@ class ChatViewComponent:
             else ui_text("chat.chat_view.steering_root")
         )
         with ui.row().classes(
-            UI_PRESENTATION[
-                "render_steering_insertion.classes.steering_tool_marker_items_center_gap_1_5"
-            ]
+            UI_PRESENTATION["render_steering_insertion.classes.marker"]
         ):
             ui.icon(
                 UI_PRESENTATION["render_steering_insertion.icon.alt_route"],
-                size=UI_PRESENTATION["render_steering_insertion.size.13px"],
+                size=UI_PRESENTATION["execution_row.icon_size"],
             )
             ui.label(
                 ui_text(
@@ -1760,6 +1566,14 @@ class ChatViewComponent:
                     skill=skill,
                 )
             )
+        if self._rendering_message is not None:
+            guidance = self._rendering_message.find_steering_message(
+                message_id=insertion.message_id
+            )
+            if guidance is not None:
+                self._render_message_body(
+                    guidance.to_chat_message(), steering="confirmed"
+                )
 
     # Streaming support methods
     def start_assistant_stream(
@@ -1782,23 +1596,23 @@ class ChatViewComponent:
         )
 
         self.streaming_reasoning_blocks.clear()
+        self.streaming_content_blocks.clear()
+        self.streaming_compactions.clear()
         self.streaming_skills.clear()
-        self.streaming_root_tools.clear()
+        self.streaming_tools.clear()
         self.streaming_steering_insertions.clear()
-        self.streaming_steering_spinners.clear()
+        self._pending_steering.clear()
+        self._streaming_steering_messages.clear()
         self.live_skill_timer_labels.clear()
         self.live_tool_timer_labels.clear()
         self.image_progress_views.clear()
         self.current_live_reasoning_container = None
         self.current_live_reasoning_block = None
         self.current_live_reasoning_timer_label = None
-        self.current_master_reasoning_expansion = None
+        self.current_content_block = None
+        self.current_response_text = ""
 
         with self.chat_container:
-            self.current_steering_container = ui.column().classes(
-                UI_PRESENTATION["start_assistant_stream.classes.w_full_gap_3"]
-            )
-            self.streaming_steering_ids.clear()
             with ui.row().classes(
                 UI_PRESENTATION[
                     "start_assistant_stream.classes.w_full_justify_start_items_start_chat_message"
@@ -1826,25 +1640,8 @@ class ChatViewComponent:
                         )
                         ui.label(ui_text("chat.chat_view.waiting_for_response"))
 
-                    # Container for separated reasoning blocks
-                    self.current_reasoning_container = ui.column().classes(
-                        UI_PRESENTATION[
-                            "start_assistant_stream.classes.w_full_gap_1_reasoning_blocks_container"
-                        ]
-                    )
-
-                    # Dynamic skills container
-                    self.current_skills_container = ui.column().classes(
+                    self.current_activity_container = ui.column().classes(
                         UI_PRESENTATION["start_assistant_stream.classes.w_full_gap_2"]
-                    )
-
-                    # Parsed HTML response (with LaTeX MathML support)
-                    self.compaction_progress_view = CompactionProgressView()
-                    self.current_response_text = ""
-                    self.current_html = ui.html("").classes(
-                        UI_PRESENTATION[
-                            "start_assistant_stream.classes.text_sm_text_zinc_200_leading_relaxed_parsed_"
-                        ]
                     )
                     self.stream_duration_label = ui.label(format_duration(0)).classes(
                         UI_PRESENTATION[
@@ -1855,6 +1652,9 @@ class ChatViewComponent:
                         EXECUTION_DEFAULTS["stream_duration_interval_seconds"],
                         self._update_stream_duration,
                     )
+            self.current_steering_container = ui.column().classes(
+                UI_PRESENTATION["start_assistant_stream.classes.w_full_gap_3"]
+            )
 
         self.raw_history_view.start_live_turn(session)
         self._render_active_secondary_tab()
@@ -1864,74 +1664,73 @@ class ChatViewComponent:
         """Show the latest live turn in a page opened after generation began."""
         if not self.current_stream_card:
             return
-        self.update_compaction_progress(message.compaction_progress)
+        compactions_changed = self._set_live_compactions(message.compaction_progress)
         previous = self._streaming_history
         execution_changed = previous is None or not message.has_same_execution_details(
             previous
         )
+        structure_changed = [
+            (block.id, block.end_time) for block in message.reasoning_blocks
+        ] != [
+            (block.id, block.end_time) for block in self.streaming_reasoning_blocks
+        ] or [block.id for block in message.content_blocks] != [
+            block.id for block in self.streaming_content_blocks
+        ]
         self._streaming_history = message
-        self.streaming_steering_insertions = message.confirmed_steering_insertions()
-        self._update_steering_spinners()
-        self.show_steering_messages(message.steering_messages)
+        steering_changed = self._update_stream_steering(message)
         self.current_response_text = message.content
-        if self.current_html:
-            self.current_html.content = parse_markdown_to_html(message.content)
         if (
             message.content
+            or message.content_blocks
             or message.reasoning_blocks
             or message.skills
             or message.tool_events
+            or message.compaction_progress
+            or (message.model_context and message.model_context.compactions)
         ) and self.current_loading_placeholder:
             self.current_loading_placeholder.set_visibility(False)
 
-        self.streaming_reasoning_blocks = message.reasoning_blocks
-        active_block = next(
-            (
-                block
-                for block in reversed(message.reasoning_blocks)
-                if block.end_time is None
-            ),
-            None,
+        activity = message.model_copy(deep=True)
+        self.streaming_reasoning_blocks = activity.reasoning_blocks
+        self.streaming_content_blocks = activity.content_blocks
+        self.current_content_block = (
+            message.content_blocks[-1] if message.content_blocks else None
         )
-        self._render_streaming_reasoning(active_block=active_block)
-        self.streaming_skills = message.skills
-        self.streaming_root_tools = [
-            event for event in message.tool_events if event.skill_path == "/"
-        ]
+        self.streaming_skills = activity.skills
+        self.streaming_tools = activity.tool_events
         self.raw_history_view.restore_live_output(message)
-        if execution_changed:
-            self._refresh_streaming_skills_and_tools()
+        if (
+            execution_changed
+            or structure_changed
+            or steering_changed
+            or compactions_changed
+            or (not message.content_blocks and previous.content != message.content)
+        ):
+            self._refresh_streaming_activity()
         else:
+            for old, block in zip(previous.content_blocks, message.content_blocks):
+                if old.content != block.content:
+                    self._update_live_content(block)
+            if self.current_live_reasoning_block is not None:
+                self.current_live_reasoning_block = self.streaming_reasoning_blocks[-1]
+                self._update_live_reasoning()
             self._update_image_progress(message.iter_tool_events())
-
-    def show_steering_messages(self, messages: list[QueuedMessage]) -> None:
-        if self.current_steering_container is None:
-            return
-        with self.current_steering_container:
-            for message in messages:
-                if message.id in self.streaming_steering_ids:
-                    continue
-                is_inserted = any(
-                    ins.message_id == message.id
-                    for ins in self.streaming_steering_insertions
-                )
-                self._render_message_body(
-                    message.to_chat_message(),
-                    steering=True,
-                    pending_steering=not is_inserted,
-                )
-                self.streaming_steering_ids.add(message.id)
 
     def update_stream_history(self, message: ChatMessage) -> None:
         """Publish newly recorded output even when no tool or skill changes state."""
         previous = self._streaming_history
         self._streaming_history = message
+        steering_changed = self._update_stream_steering(message)
         if self.raw_history_view and self.stream_session_id is not None:
             owner = self.sessions.get_session(self.stream_session_id)
             if owner is not None:
                 self.raw_history_view.update_context_snapshot(owner, message)
-        if previous is None or not message.has_same_execution_details(previous):
-            self._refresh_streaming_skills_and_tools()
+        if (
+            steering_changed
+            or previous is None
+            or not message.has_same_execution_details(previous)
+        ):
+            self._refresh_streaming_activity()
         else:
             self._update_image_progress(message.iter_tool_events())
 
@@ -1943,26 +1742,48 @@ class ChatViewComponent:
                 if not view.is_deleted:
                     view.show(event)
 
-    def show_steering_insertions(self, message: ChatMessage) -> None:
+    def _update_stream_steering(self, message: ChatMessage) -> bool:
         insertions = message.confirmed_steering_insertions()
-        if insertions != self.streaming_steering_insertions:
-            self.streaming_steering_insertions = insertions
-            self._refresh_streaming_skills_and_tools()
-        self._update_steering_spinners()
+        # A queued callback can carry an older snapshot than the latest page poll.
+        if len(message.steering_messages) < len(
+            self._streaming_steering_messages
+        ) or len(insertions) < len(self.streaming_steering_insertions):
+            return False
+        self._streaming_steering_messages = list(message.steering_messages)
+        pending = _unconfirmed_steering(message, insertions)
+        if pending != self._pending_steering:
+            self._pending_steering = pending
+            self._render_pending_steering()
 
-    def _update_steering_spinners(self) -> None:
-        for insertion in self.streaming_steering_insertions:
-            spinner = self.streaming_steering_spinners.pop(insertion.message_id, None)
-            if spinner is not None and not spinner.is_deleted:
-                spinner.set_visibility(False)
+        if insertions == self.streaming_steering_insertions:
+            return False
+        self.streaming_steering_insertions = insertions
+        active = self.current_live_reasoning_block
+        if active is not None:
+            for block in message.reasoning_blocks:
+                if block.id == active.id and block.end_time is not None:
+                    active.finalize_timing(now=block.end_time)
+                    break
+        return True
+
+    def _render_pending_steering(self, *, finished: bool = False) -> None:
+        if self.current_steering_container is None:
+            return
+        self.current_steering_container.clear()
+        with self.current_steering_container:
+            for message in self._pending_steering:
+                self._render_message_body(
+                    message.to_chat_message(),
+                    steering="unconfirmed" if finished else "pending",
+                )
 
     def _update_stream_duration(self) -> None:
         for views in self.image_progress_views.values():
             for view in views:
                 if not view.is_deleted:
                     view.refresh()
-        if self.compaction_progress_view is not None:
-            self.compaction_progress_view.refresh()
+        for view in self.live_compaction_views.values():
+            view.refresh()
         if self.stream_duration_label and self.stream_started_at is not None:
             elapsed = time.monotonic() - self.stream_started_at
             self.stream_duration_label.text = format_duration(elapsed)
@@ -1983,6 +1804,7 @@ class ChatViewComponent:
         """Finalize end_time and duration_seconds on the currently active live thinking block."""
         if self.current_live_reasoning_block is not None:
             self.current_live_reasoning_block.finalize_timing()
+            self.current_live_reasoning_block = None
 
     def stream_reasoning(
         self,
@@ -1990,6 +1812,8 @@ class ChatViewComponent:
         skill_path: str = "/",
         depth: int = 0,
         generation_index: int = 1,
+        *,
+        recorded: ReasoningBlock | None = None,
     ) -> None:
         if self.raw_history_view:
             self.raw_history_view.stream_reasoning(
@@ -2002,177 +1826,139 @@ class ChatViewComponent:
         if self.current_loading_placeholder:
             self.current_loading_placeholder.set_visibility(False)
 
-        if not self.current_reasoning_container:
+        if not self.current_activity_container:
             return
 
-        block = next(
-            (
-                item
-                for item in self.streaming_reasoning_blocks
-                if item.generation_index == generation_index
-                and item.skill_path == skill_path
-                and item.depth == depth
-            ),
-            None,
-        )
-        if block is None:
-            block = ReasoningBlock(
-                skill_path=skill_path, depth=depth, generation_index=generation_index
-            )
-            self.streaming_reasoning_blocks.append(block)
-        if block is not self.current_live_reasoning_block:
-            self._close_live_reasoning_block()
-            self._render_streaming_reasoning(active_block=block)
-
-        block.content += text
-        if self.current_thinking_label:
-            self.current_thinking_label.content = parse_markdown_to_html(block.content)
-
-    def _render_streaming_reasoning(self, active_block: ReasoningBlock | None) -> None:
-        """Show completed steps above the one currently receiving tokens."""
-        if not self.current_reasoning_container:
-            return
-        self.current_reasoning_container.clear()
-        self.current_master_reasoning_expansion = None
-        self.current_live_reasoning_container = None
-        self.current_live_reasoning_block = active_block
-        self.current_thinking_label = None
-        self.current_live_reasoning_timer_label = None
-        completed = [
-            block
-            for block in self.streaming_reasoning_blocks
-            if block is not active_block
-        ]
-        with self.current_reasoning_container:
-            if completed:
-                self.current_master_reasoning_expansion = self._render_reasoning_group(
-                    completed
-                )
-            if active_block:
-                with ui.column().classes(
-                    UI_PRESENTATION[
-                        "render_streaming_reasoning.classes.w_full_gap_2_live_reasoning"
-                    ]
-                ) as live:
-                    with ui.row().classes(
-                        UI_PRESENTATION[
-                            "render_streaming_reasoning.classes.items_center_justify_between_w_full_text_xs_t"
-                        ]
-                    ):
-                        with ui.row().classes(
-                            UI_PRESENTATION[
-                                "render_streaming_reasoning.classes.items_center_gap_2"
-                            ]
-                        ):
-                            ui.spinner(
-                                UI_PRESENTATION[
-                                    "render_streaming_reasoning.spinner.dots"
-                                ],
-                                size=UI_PRESENTATION[
-                                    "render_streaming_reasoning.size.xs"
-                                ],
-                                color=UI_PRESENTATION[
-                                    "render_streaming_reasoning.color.grey_5"
-                                ],
-                            )
-                            ui.label(ui_text("chat.chat_view.reasoning_in_progress"))
-                        self.current_live_reasoning_timer_label = ui.label(
-                            format_duration(active_block.elapsed_seconds())
-                        ).classes(
-                            UI_PRESENTATION[
-                                "render_streaming_reasoning.classes.message_time_text_10px_font_mono"
-                            ]
-                        )
-                    ui.label(
-                        ui_text(
-                            "chat.chat_view.step",
-                            active_block_generation_index=active_block.generation_index,
-                            active_block_skill_path=active_block.skill_path,
-                        )
-                    ).classes(
-                        UI_PRESENTATION[
-                            "render_streaming_reasoning.classes.text_11px_text_zinc_500_font_mono"
-                        ]
-                    )
-                    self.current_thinking_label = ui.html(
-                        parse_markdown_to_html(active_block.content)
-                    ).classes(
-                        UI_PRESENTATION[
-                            "render_streaming_reasoning.classes.thinking_box_whitespace_pre_wrap_w_full_font_"
-                        ]
-                    )
-                self.current_live_reasoning_container = live
-
-    def _compact_streaming_reasoning(self) -> None:
-        """Move completed live thinking into the compact history row."""
-        if self.current_live_reasoning_block is None:
+        block = self.current_live_reasoning_block
+        if (
+            block is not None
+            and block.generation_index == generation_index
+            and block.skill_path == skill_path
+            and block.depth == depth
+        ):
+            block.content += text
+            self._update_live_reasoning()
             return
         self._close_live_reasoning_block()
-        self._render_streaming_reasoning(active_block=None)
+        self.current_content_block = None
+        block = (
+            recorded.model_copy(
+                update={"content": text, "end_time": None, "duration_seconds": None}
+            )
+            if recorded is not None
+            else ReasoningBlock(
+                skill_path=skill_path,
+                depth=depth,
+                generation_index=generation_index,
+                content=text,
+            )
+        )
+        self.streaming_reasoning_blocks.append(block)
+        self._refresh_streaming_activity()
 
-    def stream_token(self, token: str) -> None:
-        if self.raw_history_view:
-            self.raw_history_view.stream_token(token)
-
-        if self.current_loading_placeholder:
-            self.current_loading_placeholder.set_visibility(False)
-        # Compact reasoning into a single line once response text starts streaming
-        self._compact_streaming_reasoning()
-        self.current_response_text += token
-        if self.current_html:
-            self.current_html.content = parse_markdown_to_html(
-                self.current_response_text
+    def _update_live_reasoning(self) -> None:
+        if self.current_thinking_label and self.current_live_reasoning_block:
+            self.current_thinking_label.content = parse_markdown_to_html(
+                self.current_live_reasoning_block.content
             )
 
-    def _refresh_streaming_skills_and_tools(self) -> None:
-        """Re-render the live skills and root tools container with updated timers."""
+    def _render_streaming_reasoning(self, active_block: ReasoningBlock) -> None:
+        self.current_live_reasoning_block = active_block
+        with ui.column().classes(
+            UI_PRESENTATION[
+                "render_streaming_reasoning.classes.w_full_gap_2_live_reasoning"
+            ]
+        ) as live:
+            self.current_live_reasoning_timer_label = self._render_reasoning_header(
+                active_block, live=True
+            )
+            self.current_thinking_label = ui.html(
+                parse_markdown_to_html(active_block.content)
+            ).classes(UI_PRESENTATION["reasoning_text.classes"])
+        self.current_live_reasoning_container = live
+
+    def stream_token(self, token: str, *, block: ContentBlock | None = None) -> None:
+        if block is None or block.depth == 0:
+            self.raw_history_view.stream_token(token)
+            self.current_response_text += token
+        if self.current_loading_placeholder:
+            self.current_loading_placeholder.set_visibility(False)
+        current = self.current_content_block
+        if current is not None and (block is None or block.id == current.id):
+            current.content += token
+            self._update_live_content(current)
+            return
+        self._close_live_reasoning_block()
+        current = (
+            block.model_copy(update={"content": token})
+            if block is not None
+            else ContentBlock(content=token)
+        )
+        self.current_content_block = current
+        self.streaming_content_blocks.append(current)
+        self._refresh_streaming_activity()
+
+    def _update_live_content(self, block: ContentBlock) -> None:
+        element = self.live_content_elements.get(block.id)
+        if element is not None:
+            element.content = parse_markdown_to_html(block.content)
+
+    def _refresh_streaming_activity(self) -> None:
+        """Refresh the ordered activity when its blocks or execution details change."""
         if (
             self.active_tab == "graph"
             and self.graph_view
             and not self.graph_view.is_generating
         ):
             self._render_selected_graph()
-        if not self.current_skills_container:
+        if not self.current_activity_container:
             return
         self.live_skill_timer_labels.clear()
         self.live_tool_timer_labels.clear()
         self.image_progress_views.clear()
-        snapshot = active_turns.snapshot(
-            self.stream_session_id or "", after_revision=-1
+        self.live_content_elements.clear()
+        self.live_compaction_views.clear()
+        self.current_live_reasoning_block = None
+        self.current_live_reasoning_container = None
+        self.current_live_reasoning_timer_label = None
+        self.current_thinking_label = None
+        recorded = self._streaming_history
+        message = ChatMessage(
+            role="assistant",
+            content=self.current_response_text,
+            reasoning_blocks=self.streaming_reasoning_blocks,
+            content_blocks=self.streaming_content_blocks,
+            compaction_progress=self.streaming_compactions,
+            skills=self.streaming_skills,
+            tool_events=self.streaming_tools,
+            steering_messages=self._streaming_steering_messages,
+            steering_insertions=self.streaming_steering_insertions,
         )
-        recorded = self._streaming_history or (snapshot.message if snapshot else None)
-        display_tools = []
-        for event in [
-            *self.streaming_root_tools,
-            *(recorded.tool_events if recorded else []),
-        ]:
-            record_tool_event(display_tools, event)
-        with self.current_skills_container:
-            self.current_skills_container.clear()
-            self._render_turn_activity(
-                ChatMessage(
-                    role="assistant",
-                    raw_history=recorded.raw_history if recorded else [],
-                    skill_history_tree=recorded.skill_history_tree if recorded else [],
-                    skills=self.streaming_skills,
-                    tool_events=display_tools,
-                    steering_insertions=self.streaming_steering_insertions,
-                ),
-            )
+        if recorded is not None:
+            message = message.with_recorded_execution(recorded)
+        with self.current_activity_container:
+            self.current_activity_container.clear()
+            self._render_turn_activity(message, live=True)
+            if message.unsegmented_content:
+                self._render_response_text(message.unsegmented_content)
 
     def handle_live_skill_event(self, node: SkillNode, action: str) -> None:
-        self._compact_streaming_reasoning()
+        if action != "updated":
+            self._close_live_reasoning_block()
+            self.current_content_block = None
         if self.raw_history_view:
             self.raw_history_view.handle_live_skill_event(node, action)
 
         if self.current_loading_placeholder:
             self.current_loading_placeholder.set_visibility(False)
-        if not self.current_skills_container:
+        if not self.current_activity_container:
             return
 
-        updated = _upsert_streaming_skill(self.streaming_skills, node, action)
-        if updated is None:
-            self._refresh_streaming_skills_and_tools()
+        updated = record_skill_snapshot(
+            self.streaming_skills, node.receive_snapshot(action)
+        )
+        if updated is None or action != "updated":
+            self._refresh_streaming_activity()
         else:
             self._update_image_progress(updated.iter_tool_events())
 
@@ -2180,7 +1966,7 @@ class ChatViewComponent:
         existing = next(
             (
                 item
-                for item in reversed(self.streaming_root_tools)
+                for item in reversed(self.streaming_tools)
                 if item.matches_update(ev)
             ),
             None,
@@ -2189,21 +1975,23 @@ class ChatViewComponent:
             existing.merge_update(ev)
             self._update_image_progress((existing,))
             return
-        self._compact_streaming_reasoning()
+        if existing is None:
+            self._close_live_reasoning_block()
+            self.current_content_block = None
         if self.raw_history_view:
             self.raw_history_view.add_tool_event(ev)
 
         if self.current_loading_placeholder:
             self.current_loading_placeholder.set_visibility(False)
-        if self.current_skills_container and ev.skill_path == "/":
-            record_tool_event(self.streaming_root_tools, ev)
-            self._refresh_streaming_skills_and_tools()
+        if self.current_activity_container:
+            record_tool_event(self.streaming_tools, ev)
+            self._refresh_streaming_activity()
 
     def finalize_stream(self) -> None:
-        if self.compaction_progress_view is not None:
-            self.compaction_progress_view.show([])
-            self.compaction_progress_view = None
-        self._streaming_history = None
+        for view in self.live_compaction_views.values():
+            view.show([])
+        self.live_compaction_views.clear()
+        self.streaming_compactions.clear()
         if self.stream_timer:
             self.stream_timer.cancel()
             self.stream_timer = None
@@ -2214,38 +2002,56 @@ class ChatViewComponent:
 
         if self.current_loading_placeholder:
             self.current_loading_placeholder.set_visibility(False)
-        self._compact_streaming_reasoning()
+        if self.current_live_reasoning_block is not None:
+            self._close_live_reasoning_block()
+            self._refresh_streaming_activity()
 
+        self._streaming_history = None
         self.current_stream_card = None
+        if self._pending_steering:
+            self._render_pending_steering(finished=True)
         self.current_steering_container = None
-        self.streaming_steering_ids.clear()
+        self._pending_steering.clear()
+        self._streaming_steering_messages.clear()
         self.streaming_steering_insertions.clear()
-        for spinner in self.streaming_steering_spinners.values():
-            if not spinner.is_deleted:
-                spinner.set_visibility(False)
-        self.streaming_steering_spinners.clear()
         self.stream_session_id = None
-        self.current_html = None
         self.current_response_text = ""
         self.current_thinking_label = None
         self.current_live_reasoning_timer_label = None
         self.current_loading_placeholder = None
-        self.current_reasoning_container = None
         self.current_live_reasoning_container = None
         self.current_live_reasoning_block = None
-        self.current_skills_container = None
-        self.current_master_reasoning_expansion = None
+        self.current_activity_container = None
+        self.current_content_block = None
         self.streaming_reasoning_blocks.clear()
+        self.streaming_content_blocks.clear()
+        self.live_content_elements.clear()
         self.streaming_skills.clear()
-        self.streaming_root_tools.clear()
+        self.streaming_tools.clear()
         self.live_skill_timer_labels.clear()
         self.live_tool_timer_labels.clear()
         self.image_progress_views.clear()
 
-    def update_compaction_progress(
-        self, events: list[DeepAgentCompactionProgressEvent]
-    ) -> None:
-        if self.compaction_progress_view is not None:
-            self.compaction_progress_view.show(events)
-            if events and self.current_loading_placeholder:
-                self.current_loading_placeholder.set_visibility(False)
+    def _set_live_compactions(self, activities: list[CompactionActivity]) -> bool:
+        changed = [item.id for item in activities] != [
+            item.id for item in self.streaming_compactions
+        ]
+        self.streaming_compactions = list(activities)
+        if not changed:
+            for item in activities:
+                view = self.live_compaction_views.get(item.id)
+                if view is not None and not isinstance(item.source, RecordedCompaction):
+                    view.show([item.source])
+        return changed
+
+    def update_compaction_progress(self, activities: list[CompactionActivity]) -> None:
+        if not self.current_activity_container:
+            return
+        if activities and self.current_loading_placeholder:
+            self.current_loading_placeholder.set_visibility(False)
+        previous_ids = {item.id for item in self.streaming_compactions}
+        if any(item.id not in previous_ids for item in activities):
+            self._close_live_reasoning_block()
+            self.current_content_block = None
+        if self._set_live_compactions(activities):
+            self._refresh_streaming_activity()

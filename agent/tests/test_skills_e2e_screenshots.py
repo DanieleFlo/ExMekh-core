@@ -196,8 +196,11 @@ async def test_nested_skills_animation_and_screenshots(agent_server: str) -> Non
         await nested_header.click()
         await expect(nested_header).to_have_attribute("aria-expanded", "true")
         await expect(
-            page.get_by_text("Actions executed in skill:", exact=True).last
+            nested_header.locator("..").get_by_text("Tool: nested-sub-tool", exact=True)
         ).to_be_visible()
+        await expect(
+            page.get_by_text("Actions executed in skill:", exact=True)
+        ).to_have_count(0)
 
         screenshot_3 = screenshots_dir / "03_skill_expanded_detail.png"
         await page.screenshot(path=str(screenshot_3))

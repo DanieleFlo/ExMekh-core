@@ -180,7 +180,7 @@ def test_tool_output_arriving_after_completion_updates_the_open_panel():
             )
             panels = [
                 element
-                for element in view.current_skills_container.descendants()
+                for element in view.current_activity_container.descendants()
                 if "tool-output-panel" in element._classes
             ]
             assert panels[0].visible
@@ -325,6 +325,7 @@ def test_reconnected_reasoning_updates_keep_execution_controls_mounted():
             view.start_assistant_stream()
             snapshot = ChatMessage(
                 role="assistant",
+                reasoning_blocks=[ReasoningBlock(content="root reasoning")],
                 skills=[
                     SkillNode(
                         name="work",
@@ -339,13 +340,13 @@ def test_reconnected_reasoning_updates_keep_execution_controls_mounted():
             )
             view.restore_stream_snapshot(snapshot)
             before = tuple(
-                element.id for element in view.current_skills_container.descendants()
+                element.id for element in view.current_activity_container.descendants()
             )
             updated = snapshot.model_copy(deep=True)
-            updated.reasoning_blocks = [ReasoningBlock(content="more root reasoning")]
+            updated.reasoning_blocks[0].content += " continues"
             view.restore_stream_snapshot(updated)
             after = tuple(
-                element.id for element in view.current_skills_container.descendants()
+                element.id for element in view.current_activity_container.descendants()
             )
             assert before == after
             changed = updated.model_copy(deep=True)
@@ -355,7 +356,7 @@ def test_reconnected_reasoning_updates_keep_execution_controls_mounted():
             assert (
                 tuple(
                     element.id
-                    for element in view.current_skills_container.descendants()
+                    for element in view.current_activity_container.descendants()
                 )
                 != after
             )
@@ -369,21 +370,12 @@ def test_reasoning_expansion_choices_survive_rendering_the_same_blocks_again():
         with client:
             view = ChatViewComponent(lambda _: None)
             block = ReasoningBlock(content="recorded reasoning", end_time=1)
-            original = view._render_reasoning_group([block])
+            original = view._render_reasoning_block(block)
             original.set_value(True)
-            child = next(
-                element
-                for element in original.descendants()
-                if isinstance(element, ui.expansion)
-            )
-            child.set_value(True)
-            restored = view._render_reasoning_group([block.model_copy(deep=True)])
+            restored = view._render_reasoning_block(block.model_copy(deep=True))
             assert restored.value is True
-            restored_child = next(
-                element
-                for element in restored.descendants()
-                if isinstance(element, ui.expansion)
-            )
-            assert restored_child.value is True
+            [content] = restored.default_slot.children
+            assert isinstance(content, ui.html)
+            assert "recorded reasoning" in content.content
     finally:
         client.delete()

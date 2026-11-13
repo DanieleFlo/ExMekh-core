@@ -155,7 +155,7 @@ def layout_server(tmp_path_factory):
                 message = ChatMessage(role="assistant", steering_insertions=[
                     SteeringInsertion(message_id="guidance", after_tool_call_id=None,
                                       tool_name=None, skill_path="/", timestamp=15)])
-                view.show_steering_insertions(message)
+                view.update_stream_history(message)
                 def later_tool():
                     view.add_tool_event(ToolEvent(tool_name="later", tool_call_id="later", timestamp=20))
                 ui.button("Later tool", on_click=later_tool)

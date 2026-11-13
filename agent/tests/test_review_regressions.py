@@ -71,7 +71,7 @@ def test_generic_tool_results_and_late_arguments_are_consistent(status, call_id)
                 message.tool_events,
                 skill.tool_events,
                 child.message_history()[-1].tool_events,
-                view.streaming_root_tools,
+                view.streaming_tools,
                 raw.live_tool_events,
             ):
                 assert len(events) == 1
@@ -125,7 +125,6 @@ def test_explicit_steering_confirmations_control_live_spinners_after_restore():
             view.start_assistant_stream()
             first = QueuedMessage(text="Same guidance")
             second = QueuedMessage(text=first.text)
-            view.show_steering_messages([first, second])
             snapshot = ChatMessage(
                 role="assistant",
                 steering_messages=[first, second],
@@ -133,8 +132,8 @@ def test_explicit_steering_confirmations_control_live_spinners_after_restore():
                 raw_history=[{"role": "user", "content": first.text}],
                 steering_insertions=[],
             )
-            view.show_steering_insertions(snapshot)
-            assert set(view.streaming_steering_spinners) == {first.id, second.id}
+            view.update_stream_history(snapshot)
+            assert len(view.current_steering_container.default_slot.children) == 2
             snapshot.steering_insertions = [
                 SteeringInsertion(
                     message_id=first.id,
@@ -143,11 +142,15 @@ def test_explicit_steering_confirmations_control_live_spinners_after_restore():
                     skill_path="/",
                 )
             ]
-            first_spinner = view.streaming_steering_spinners[first.id]
             view.restore_stream_snapshot(snapshot)
-            assert not first_spinner.visible
-            assert set(view.streaming_steering_spinners) == {second.id}
-            view.streaming_steering_spinners[second.id].delete()
+            assert len(view.current_steering_container.default_slot.children) == 1
+            assert (
+                sum(
+                    "msg-user-steering" in element._classes
+                    for element in view.current_activity_container.descendants()
+                )
+                == 1
+            )
             view.finalize_stream()
     finally:
         client.delete()

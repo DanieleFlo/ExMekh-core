@@ -109,7 +109,11 @@ async def test_generated_batch_loading_order_gallery_and_model_delivery(
                 first_source = await page.locator(
                     ".exmekh-preview-image img"
                 ).first.get_attribute("src")
+                reset = page.get_by_role("button", name="Reset zoom", exact=True)
+                await page.get_by_role("button", name="Zoom in", exact=True).click()
+                await expect(reset).to_have_text("125%")
                 await page.get_by_role("button", name="Next image", exact=True).click()
+                await expect(reset).to_have_text("100%")
                 await expect(
                     page.get_by_role("button", name="Previous image", exact=True)
                 ).to_be_visible()

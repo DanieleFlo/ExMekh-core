@@ -1,9 +1,15 @@
 {
-  "container": "compaction-progress w-full gap-2 p-3 rounded-lg border border-sky-900 bg-sky-950/30",
+  "container": "compaction-progress w-full gap-2",
   "row": "w-full gap-1 min-w-0",
-  "title": "text-xs font-medium text-sky-300 break-all",
+  "heading": "execution-row compaction-progress-heading w-full items-center justify-between",
+  "body": "compaction-progress-body w-full min-w-0 gap-1",
   "details": "text-xs text-zinc-400 tabular-nums break-words",
+  "elapsed": "compaction-elapsed message-time ml-auto text-right text-xs font-mono tabular-nums",
   "color": "sky-400",
   "indeterminate_props": "indeterminate",
-  "bar_props_template": "aria-label=\"{label}\""
+  "bar_props_template": "aria-label=\"{label}\"",
+  "applied": "execution-row compaction-marker w-full items-center justify-between",
+  "applied_details": "compaction-marker-details message-time ml-auto text-right text-xs font-mono tabular-nums",
+  "icon": "compress",
+  "icon_classes": "compaction-status-icon"
 }

@@ -298,6 +298,7 @@ async def test_gallery_controls_copy_failure_and_download_types(copied, deleted)
             client,
             patch("nicegui.ui.download") as download,
             patch("nicegui.ui.run_javascript", side_effect=copy),
+            patch.object(client, "run_javascript") as update_zoom,
             patch("nicegui.ui.notify") as notify,
             patch(
                 "nicegui.background_tasks.create_or_defer",
@@ -324,7 +325,15 @@ async def test_gallery_controls_copy_failure_and_download_types(copied, deleted)
 
             click("Download image")
             download.content.assert_called_once_with(b"abc", "image-2.png", "image/png")
+            click("Zoom out")
+            assert buttons["Reset zoom"].text == "75%"
+            click("Reset zoom")
+            assert buttons["Reset zoom"].text == "100%"
+            click("Zoom in")
+            assert buttons["Reset zoom"].text == "125%"
             click("Previous image")
+            assert buttons["Reset zoom"].text == "100%"
+            assert "'100%'" in update_zoom.call_args.args[0]
             click("Download image")
             download.assert_called_once_with("https://example.test/image.png")
             click("Next image")

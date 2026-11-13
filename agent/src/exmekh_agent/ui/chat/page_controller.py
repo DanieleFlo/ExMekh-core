@@ -315,11 +315,7 @@ class ChatPageController:
                 and snapshot
                 and snapshot.message is not None
             ):
-                self.chat_view.show_steering_messages(
-                    snapshot.message.steering_messages
-                )
                 self.chat_view.update_stream_history(snapshot.message)
-                self.chat_view.show_steering_insertions(snapshot.message)
                 self._followed_revision = snapshot.revision
         if snapshot is None:
             if self._followed_session_id == session.id:
@@ -982,12 +978,15 @@ class ChatPageController:
             def mark_stream_changed() -> None:
                 active_turns.mark_changed(session.id, collector)
 
-            def on_token(token: str) -> None:
+            def on_token(token: str, skill_path: str = "/", depth: int = 0) -> None:
                 if not accepts_events():
                     return
-                collector.append_token(token)
+                block = collector.append_token(token, skill_path, depth)
+                snapshot = block.token_snapshot(token)
                 mark_stream_changed()
-                show_stream_update(lambda view: view.stream_token(token))
+                show_stream_update(
+                    lambda view: view.stream_token(token, block=snapshot)
+                )
                 self._schedule_live_context_update(
                     loop, session, collector, accepts_events=accepts_pending_events
                 )
@@ -997,7 +996,7 @@ class ChatPageController:
                     return
                 block = collector.append_reasoning(
                     token, skill_path=skill_path, depth=depth
-                )
+                ).model_copy()
                 mark_stream_changed()
                 show_stream_update(
                     lambda view: view.stream_reasoning(
@@ -1005,6 +1004,7 @@ class ChatPageController:
                         skill_path=skill_path,
                         depth=depth,
                         generation_index=block.generation_index,
+                        recorded=block,
                     )
                 )
                 self._schedule_live_context_update(
@@ -1029,12 +1029,14 @@ class ChatPageController:
             def on_skill(node: SkillNode, action: str) -> None:
                 if not accepts_events():
                     return
-                collector.append_skill(node.model_copy(deep=True), action)
+                collector.append_skill(node, action)
                 mark_stream_changed()
                 populate_skill_closure_tokens(session, collector=collector)
-                snapshot = collector.skill_snapshot(node.path) or node.model_copy(
-                    deep=True
+                snapshot = collector.skill_snapshot(
+                    node.path, node.opening_tool_call_id
                 )
+                if snapshot is None:
+                    snapshot = node.model_copy(deep=True)
                 show_stream_update(
                     lambda view: view.handle_live_skill_event(snapshot, action)
                 )
@@ -1056,7 +1058,6 @@ class ChatPageController:
                 mark_stream_changed()
                 snapshot = collector.snapshot_message()
                 show_stream_update(lambda view: view.update_stream_history(snapshot))
-                show_stream_update(lambda view: view.show_steering_insertions(snapshot))
                 populate_skill_closure_tokens(session, collector=collector)
                 self._schedule_live_context_update(
                     loop,
@@ -1083,9 +1084,10 @@ class ChatPageController:
             def on_steering_added() -> None:
                 if not accepts_events():
                     return
+                collector.finish_stream_block()
                 mark_stream_changed()
                 snapshot = collector.snapshot_message()
-                show_stream_update(lambda view: view.show_steering_insertions(snapshot))
+                show_stream_update(lambda view: view.update_stream_history(snapshot))
 
             def on_context(context: ProviderContextUsage) -> None:
                 if not accepts_events():
@@ -1191,7 +1193,8 @@ class ChatPageController:
 
             assistant_message = collector.build_message(
                 role="assistant",
-                fallback_content=response_text,
+                response=response_text if message_error is None else "",
+                fallback_content=response_text if message_error is not None else "",
                 error=message_error,
             )
             assistant_message.duration_seconds = time.time() - started_at

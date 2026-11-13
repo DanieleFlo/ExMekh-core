@@ -240,3 +240,9 @@ async def test_copy_actions_use_visible_user_text_and_current_root_chat():
             if "tool-arguments-preview" in element._classes
         ]
         assert "&lt;script&gt;" in previews[-1].content
+        parameters = [
+            element
+            for element in client.elements.values()
+            if "tool-parameters-panel" in element._classes
+        ]
+        assert "&lt;script&gt;" in parameters[-1].content

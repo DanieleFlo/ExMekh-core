@@ -5,11 +5,51 @@ from __future__ import annotations
 import time
 from collections.abc import Sequence
 from copy import deepcopy
+from dataclasses import dataclass, replace
 from typing import Any
 
+from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
 from pydantic import BaseModel, Field
 
 from exmekh_agent.exmekh_bridge.history.tool_calls import parse_tool_calls
+
+
+@dataclass(frozen=True, slots=True)
+class CompactionActivity:
+    id: str
+    timestamp: float
+    source: RecordedCompaction | DeepAgentCompactionProgressEvent
+
+    @property
+    def skill_path(self) -> str:
+        return self.source.skill_path
+
+
+def compaction_start_time(event: DeepAgentCompactionProgressEvent) -> float:
+    """Translate the provider's monotonic start into the transcript clock."""
+    return time.time() - event.progress.elapsed_seconds()
+
+
+def update_compaction_activity(
+    active: list[CompactionActivity],
+    event: DeepAgentCompactionProgressEvent,
+    *,
+    timestamp: float | None = None,
+) -> bool:
+    """Update a running operation, returning whether a new one started."""
+    operation_id = event.progress.operation_id
+    for index, activity in enumerate(active):
+        if activity.id == operation_id:
+            if event.progress.finished:
+                active.pop(index)
+            else:
+                active[index] = replace(activity, source=event)
+            return False
+    if event.progress.finished:
+        return False
+    started_at = compaction_start_time(event) if timestamp is None else timestamp
+    active.append(CompactionActivity(operation_id, started_at, event))
+    return True
 
 
 class RecordedCompaction(BaseModel):
@@ -21,7 +61,9 @@ class RecordedCompaction(BaseModel):
     following_user_count: int = 0
     skill_path: str = "/"
     depth: int = 0
-    timestamp: float | None = Field(default_factory=time.time)
+    timestamp: float | None = None
+    duration_seconds: float | None = None
+    completed_summaries: int | None = None
 
 
 class ModelContextCheckpoint(BaseModel):
@@ -83,15 +125,25 @@ class HistoryArchive:
             checkpoint.model_copy(deep=True) if checkpoint else ModelContextCheckpoint()
         )
         self._prior_user_count = 0
+        self._completed_compactions: dict[str, DeepAgentCompactionProgressEvent] = {}
 
     def begin_turn(self, history: list[dict[str, Any]] | None = None) -> None:
         self._checkpoint.compactions = []
+        self._completed_compactions.clear()
         if history is not None:
             self._checkpoint.history = deepcopy(history)
         self._prior_user_count = sum(
             message.get("role") == "user" for message in self._checkpoint.history
         )
         self._checkpoint.turn_start = None
+
+    def observe_compaction_progress(
+        self, event: DeepAgentCompactionProgressEvent
+    ) -> None:
+        if event.progress.phase == "completed":
+            self._completed_compactions[event.skill_path] = event
+        else:
+            self._completed_compactions.pop(event.skill_path, None)
 
     def record_compaction(
         self,
@@ -114,6 +166,9 @@ class HistoryArchive:
                 anchor = item["tool_call_id"]
                 break
             following_users += item.get("role") == "user"
+        completed = self._completed_compactions.pop(skill_path, None)
+        progress = completed.progress if completed is not None else None
+        duration = progress.elapsed_seconds() if progress is not None else None
         self._checkpoint.compactions.append(
             RecordedCompaction(
                 id=operation_id,
@@ -122,6 +177,11 @@ class HistoryArchive:
                 following_user_count=following_users,
                 skill_path=skill_path,
                 depth=depth,
+                timestamp=time.time() - (duration or 0),
+                duration_seconds=duration,
+                completed_summaries=progress.completed_summaries
+                if progress is not None
+                else None,
             )
         )
 

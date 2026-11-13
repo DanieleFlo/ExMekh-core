@@ -16,6 +16,7 @@ from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
 from exmekh_agent.exmekh_bridge.history.compaction import replay_model_context
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
+from exmekh_agent.exmekh_bridge.history.skill_history import skill_opening_call_id
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -596,14 +597,14 @@ def _annotate_skill_tree_recursive(
     scope_messages: list[dict[str, Any]],
     skill_tree: list[dict[str, Any]],
     prior_messages: list[dict[str, Any]],
-    matched_by_name: dict[str, tuple[int, int]],
+    matched: dict[tuple[str, str], tuple[int, int]],
 ) -> None:
     """Recursively annotate skill_history_tree dicts with before/after closure tokens."""
     running_prefix = list(prior_messages)
     last_idx = 0
     for sk in skill_tree:
         skill_name = str(sk.get("skill") or "")
-        call_id = sk.get("opening_tool_call_id")
+        call_id = skill_opening_call_id(sk)
         open_idx = find_skill_opening_index(scope_messages, skill_name, call_id)
         if open_idx >= last_idx:
             running_prefix.extend(scope_messages[last_idx : open_idx + 1])
@@ -623,40 +624,49 @@ def _annotate_skill_tree_recursive(
         if children:
             inner_scope = _extract_inner_skill_messages(sk)
             _annotate_skill_tree_recursive(
-                inner_scope, children, running_prefix, matched_by_name
+                inner_scope, children, running_prefix, matched
             )
 
         if not _is_skill_tree_entry_open(sk) and not sk.get("tokens_pending"):
             before_tok, after_tok = compute_raw_skill_compaction_tokens(
                 sk, prefix_messages=running_prefix
             )
-            if skill_name:
-                matched_by_name[skill_name] = (before_tok, after_tok)
+            if call_id:
+                matched["call", call_id] = (before_tok, after_tok)
+            elif skill_name:
+                matched["name", skill_name] = (before_tok, after_tok)
 
 
 def _apply_matched_tokens_to_skill_nodes(
     skills: list[SkillNode],
-    matched_by_name: dict[str, tuple[int, int]],
+    matched: dict[tuple[str, str], tuple[int, int]],
     base_tokens: int,
 ) -> None:
     """Apply matched tree token counts or fallback node calculation to closed SkillNodes."""
     running_base = base_tokens
     for node in skills:
         tail_name = node.path.rstrip("/").split("/")[-1] if node.path else ""
-        matched = matched_by_name.get(node.name) or matched_by_name.get(tail_name)
+        counts = (
+            matched.get(("call", node.opening_tool_call_id))
+            if node.opening_tool_call_id
+            else None
+        )
+        counts = (
+            counts
+            or matched.get(("name", node.name))
+            or matched.get(("name", tail_name))
+        )
         if node.status != "active":
             if node.tokens_pending:
                 continue
             if not node.has_closure_tokens:
-                if matched is not None:
-                    node.record_closure_tokens(*matched)
+                if counts is not None:
+                    node.record_closure_tokens(*counts)
                 else:
                     compute_skill_node_closure_tokens(node, base_tokens=running_base)
             running_base = int(node.tokens_after_close or running_base)
         if node.sub_skills:
-            _apply_matched_tokens_to_skill_nodes(
-                node.sub_skills, matched_by_name, running_base
-            )
+            _apply_matched_tokens_to_skill_nodes(node.sub_skills, matched, running_base)
 
 
 def _populate_single_turn(
@@ -666,15 +676,15 @@ def _populate_single_turn(
     running_messages: list[dict[str, Any]],
 ) -> None:
     """Populate closure tokens for one assistant turn's skill_history_tree and SkillNodes."""
-    matched_by_name: dict[str, tuple[int, int]] = {}
+    matched: dict[tuple[str, str], tuple[int, int]] = {}
     _annotate_skill_tree_recursive(
         turn_history,
         skill_history_tree,
         running_messages,
-        matched_by_name,
+        matched,
     )
     base_tok = sum(count_message_dict_tokens(m) for m in running_messages)
-    _apply_matched_tokens_to_skill_nodes(skills, matched_by_name, base_tok)
+    _apply_matched_tokens_to_skill_nodes(skills, matched, base_tok)
 
 
 def populate_skill_closure_tokens(

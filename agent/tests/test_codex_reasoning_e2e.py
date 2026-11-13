@@ -5,11 +5,16 @@ import time
 from pathlib import Path
 
 import pytest
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, expect
 
+from exmekh_agent.exmekh_bridge.history.compaction import (
+    ModelContextCheckpoint,
+    RecordedCompaction,
+)
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
+    ContentBlock,
     ReasoningBlock,
     SkillNode,
     ToolEvent,
@@ -30,12 +35,14 @@ def agent_codex_server(tmp_path_factory: pytest.TempPathFactory):
         skill_path="/",
         depth=0,
         generation_index=1,
+        timestamp=1,
         content="[Fase 1 - Root] Analisi iniziale della richiesta: decido di invocare la skill mock-skill.",
     )
     b2 = ReasoningBlock(
         skill_path="/mock-skill",
         depth=1,
         generation_index=2,
+        timestamp=3,
         content=(
             "[Fase 2 - Skill mock-skill] Calcolo passo passo di $\\int x^2 \\, dx$:\n\n"
             "$$\\int x^2 \\, dx = \\frac{x^3}{3} + C$$\n\n"
@@ -46,6 +53,7 @@ def agent_codex_server(tmp_path_factory: pytest.TempPathFactory):
         skill_path="/",
         depth=0,
         generation_index=3,
+        timestamp=6,
         content="[Fase 3 - Root Sintesi] Sintesi finale dopo il ritorno dalla skill: elaborazione risposta per l'utente.",
     )
 
@@ -54,12 +62,22 @@ def agent_codex_server(tmp_path_factory: pytest.TempPathFactory):
         path="/mock-skill",
         depth=1,
         status="completed",
+        start_time=2,
+        end_time=5.5,
         is_collapsed=True,
         tool_events=[
-            ToolEvent(tool_name="mock-tool", depth=1, skill_path="/mock-skill")
+            ToolEvent(
+                tool_name="mock-tool", depth=1, skill_path="/mock-skill", timestamp=5
+            )
         ],
     )
 
+    response = (
+        "Esecuzione completata con successo: i processi di ragionamento sono separati per path e generazione.\n\n"
+        "Calcolo dell'integrale di $x^2$ passo passo in $dx$:\n\n"
+        "$$\\int x^2 \\, dx = \\frac{x^3}{3} + C$$\n\n"
+        "La formula generale applicata è $\\int x^n \\, dx = \\frac{x^{n+1}}{n+1} + C$."
+    )
     codex_session = ChatSession(
         id="test-codex-multipath-reasoning",
         title="Codex Multi-Path Reasoning",
@@ -71,15 +89,33 @@ def agent_codex_server(tmp_path_factory: pytest.TempPathFactory):
             ),
             ChatMessage(
                 role="assistant",
-                content=(
-                    "Esecuzione completata con successo: i processi di ragionamento sono separati per path e generazione.\n\n"
-                    "Calcolo dell'integrale di $x^2$ passo passo in $dx$:\n\n"
-                    "$$\\int x^2 \\, dx = \\frac{x^3}{3} + C$$\n\n"
-                    "La formula generale applicata è $\\int x^n \\, dx = \\frac{x^{n+1}}{n+1} + C$."
-                ),
+                content=response,
+                content_blocks=[
+                    ContentBlock(
+                        skill_path="/mock-skill",
+                        depth=1,
+                        timestamp=4,
+                        content="Risultato intermedio della skill.",
+                    ),
+                    ContentBlock(content=response, timestamp=7),
+                ],
                 reasoning_blocks=[b1, b2, b3],
                 reasoning_content=f"{b1.content}\n\n{b2.content}\n\n{b3.content}",
                 skills=[skill_completed],
+                tool_events=[ToolEvent(tool_name="final-tool", timestamp=8)],
+                model_context=ModelContextCheckpoint(
+                    compactions=[
+                        RecordedCompaction(
+                            id="applied",
+                            replacement_call_ids=["first", "second"],
+                            skill_path=skill_completed.path,
+                            depth=1,
+                            timestamp=4.5,
+                            duration_seconds=0.25,
+                            completed_summaries=2,
+                        )
+                    ]
+                ),
             ),
         ],
     )
@@ -94,13 +130,7 @@ def agent_codex_server(tmp_path_factory: pytest.TempPathFactory):
 
 @pytest.mark.asyncio
 async def test_codex_multipath_reasoning_e2e(agent_codex_server: str) -> None:
-    """E2E Test verifying:
-
-    1. Reasoning text is partitioned into separate blocks by path and generation (NOT merged into one).
-    2. Paths and generation indicators are clearly labeled on each block.
-    3. UI reflects clean Codex aesthetic (subtle dark borders, no bright purple gradients or neon glow).
-    4. Captures screenshot to agent/screenshots/04_codex_multipath_reasoning.png.
-    """
+    """Verify that each thinking block opens directly in its timeline position."""
     agent_dir = Path(__file__).resolve().parents[1]
     screenshots_dir = agent_dir / "screenshots"
     screenshots_dir.mkdir(parents=True, exist_ok=True)
@@ -123,59 +153,102 @@ async def test_codex_multipath_reasoning_e2e(agent_codex_server: str) -> None:
             await session_locator.click()
             await asyncio.sleep(0.8)
 
-        # 1. Verify that the reasoning blocks are compacted into a single master line
-        master_header = page.locator(".reasoning-master-header").first
-        await master_header.wait_for(state="visible", timeout=8000)
-        master_text = await master_header.inner_text()
-        assert "Reasoning Process" in master_text, (
-            f"Expected 'Reasoning Process' in master header, got '{master_text}'"
+        skill = page.locator(".skill-compact-header")
+        skill_body = skill.locator("..").locator(".skill-activity")
+        await expect(page.locator(".compaction-marker")).to_be_hidden()
+        await expect(skill_body).to_be_hidden()
+        await skill.click()
+        await expect(skill_body).to_be_visible()
+        await expect(skill_body).to_have_css(
+            "border-left", "2px solid rgb(52, 211, 153)"
         )
-        assert "3 blocks" in master_text, (
-            f"Expected '3 blocks' in master header, got '{master_text}'"
+        assert await skill.evaluate("""header => {
+            const headerBox = header.getBoundingClientRect();
+            const bodyBox = header.nextElementSibling.getBoundingClientRect();
+            return Math.abs(headerBox.left - bodyBox.left) < 1
+                && Math.abs(headerBox.bottom - bodyBox.top) < 1
+                && bodyBox.height > headerBox.height;
+        }""")
+        await expect(
+            page.get_by_text("Risultato intermedio della skill.")
+        ).to_be_visible()
+        marker = skill.locator("..").locator(".compaction-marker")
+        await expect(marker).to_be_visible()
+        heading = marker.get_by_text("Context compacted · /mock-skill", exact=True)
+        details = marker.locator(".compaction-marker-details")
+        await expect(details).to_have_text(
+            "Elapsed 0.25s · 2 history blocks · 2 summaries"
         )
+        assert (await heading.bounding_box())["x"] < (await details.bounding_box())["x"]
 
-        # 2. Click the master line to expand into the 3 sub-blocks
-        await master_header.click()
-        await asyncio.sleep(0.4)
-
-        # Verify that 3 distinct reasoning sub-blocks are present
-        sub_blocks = page.locator(".reasoning-sub-block")
-        count = await sub_blocks.count()
-        assert count == 3, f"Expected 3 separate reasoning sub-blocks, got {count}"
-
-        # 3. Verify path badges on each sub-block
-        path_badges = page.locator(".reasoning-path-badge")
-        badge_texts = [
-            await path_badges.nth(i).inner_text()
-            for i in range(await path_badges.count())
+        activities = page.locator(
+            ".msg-assistant .reasoning-master-header, "
+            ".msg-assistant .parsed-response-content, .msg-assistant .tool-event-card, "
+            ".msg-assistant .compaction-marker"
+        )
+        assert await activities.evaluate_all(
+            """elements => elements.map(element => {
+                if (element.matches('.reasoning-master-header')) return 'thinking';
+                if (element.matches('.tool-event-card')) return 'tool';
+                if (element.matches('.compaction-marker')) return 'compaction';
+                return 'content';
+            })"""
+        ) == [
+            "thinking",
+            "thinking",
+            "content",
+            "compaction",
+            "tool",
+            "thinking",
+            "content",
+            "tool",
         ]
-        assert badge_texts[0].strip() == "/", (
-            f"First block expected '/', got '{badge_texts[0]}'"
-        )
-        assert badge_texts[1].strip() == "/mock-skill", (
-            f"Second block expected '/mock-skill', got '{badge_texts[1]}'"
-        )
-        assert badge_texts[2].strip() == "/", (
-            f"Third block expected '/', got '{badge_texts[2]}'"
-        )
 
-        # 4. Verify generation index badges on each sub-block
-        gen_badges = page.locator(".reasoning-gen-badge")
-        gen_texts = [
-            await gen_badges.nth(i).inner_text()
-            for i in range(await gen_badges.count())
-        ]
-        assert "gen #1" in gen_texts[0], f"Expected 'gen #1', got '{gen_texts[0]}'"
-        assert "gen #2" in gen_texts[1], f"Expected 'gen #2', got '{gen_texts[1]}'"
-        assert "gen #3" in gen_texts[2], f"Expected 'gen #3', got '{gen_texts[2]}'"
+        sections = page.locator(".reasoning-master-expansion")
+        await expect(sections).to_have_count(3)
+        first_header = sections.first.locator(".reasoning-master-header")
+        tool = page.locator(".tool-event-card").filter(has_text="Tool: final-tool")
+        row_style = """element => {
+            const style = getComputedStyle(element);
+            return [style.borderLeft, style.borderTopWidth, style.paddingLeft, style.backgroundColor];
+        }"""
+        assert await first_header.evaluate(row_style) == await tool.evaluate(row_style)
+        horizontal_alignment = """row => {
+            const icon = row.querySelector('.tool-event-main > .q-icon');
+            return [row.getBoundingClientRect().x, icon.getBoundingClientRect().x];
+        }"""
+        assert await first_header.evaluate(horizontal_alignment) == await tool.evaluate(
+            horizontal_alignment
+        )
+        assert await skill.evaluate(horizontal_alignment) == await tool.evaluate(
+            horizontal_alignment
+        )
+        inner_tool = page.locator(".tool-event-card").filter(has_text="Tool: mock-tool")
+        inner_thinking = sections.nth(1).locator(".reasoning-master-header")
+        assert await marker.evaluate(horizontal_alignment) == await inner_tool.evaluate(
+            horizontal_alignment
+        )
+        assert await marker.evaluate(
+            horizontal_alignment
+        ) == await inner_thinking.evaluate(horizontal_alignment)
+        await expect(skill).to_have_css("border-left-color", "rgb(52, 211, 153)")
+        await expect(skill.locator(".skill-status-icon")).to_have_css(
+            "color", "rgb(52, 211, 153)"
+        )
+        await expect(marker).to_have_css("border-left-color", "rgb(56, 189, 248)")
+        for section in await sections.all():
+            header = section.locator(".reasoning-master-header")
+            await expect(header).to_contain_text("Reasoning Process")
+            await expect(header).not_to_contain_text("1 block")
+            await expect(section.locator(".q-expansion-item")).to_have_count(0)
+            thinking = section.locator(".thinking-box")
+            await expect(thinking).to_be_hidden()
+            await header.click()
+            await expect(thinking).to_be_visible()
 
-        # 5. Expand each sub-block with a click to reveal its individual thinking text
-        sub_headers = page.locator(".reasoning-sub-header")
-        sub_count = await sub_headers.count()
-        assert sub_count == 3, f"Expected 3 sub-headers, got {sub_count}"
-        for i in range(3):
-            await sub_headers.nth(i).click()
-            await asyncio.sleep(0.3)
+        await tool.click()
+        await expect(tool).to_have_attribute("aria-expanded", "true")
+        assert await first_header.evaluate(row_style) == await tool.evaluate(row_style)
 
         thinking_labels = page.locator(".thinking-box")
         t_count = await thinking_labels.count()

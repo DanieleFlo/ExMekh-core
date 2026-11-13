@@ -64,14 +64,16 @@ def test_reasoning_keeps_precalculated_duration_when_closed() -> None:
     assert block.duration_seconds == 2
 
 
-def test_tool_event_without_payload_does_not_change_child() -> None:
+def test_execution_event_without_payload_does_not_change_child() -> None:
     session = ChatSession()
     session.start_sub_agent_conversation("child", "main/child", False, "task")
-    event = SubAgentEvent(
-        action="tool", id="child", path="main/child", persistent_history=False
-    )
-    conversation = apply_sub_agent_event(session, event)
+    for action in ("tool", "compaction"):
+        event = SubAgentEvent(
+            action=action, id="child", path="main/child", persistent_history=False
+        )
+        conversation = apply_sub_agent_event(session, event)
     assert conversation.messages[-1].tool_events == []
+    assert conversation.messages[-1].compaction_progress == []
 
 
 def test_session_deletion_handles_missing_file_and_noncurrent_session(tmp_path) -> None:

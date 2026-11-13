@@ -28,11 +28,17 @@ def apply_sub_agent_event(
         )
 
     if event.action == "token":
-        conversation.append_token(event.token)
+        conversation.append_token(event.token, timestamp=event.timestamp)
     elif event.action == "reasoning":
-        conversation.append_reasoning(event.token, event.skill_path, event.depth)
+        conversation.append_reasoning(
+            event.token, event.skill_path, event.depth, timestamp=event.timestamp
+        )
     elif event.action == "tool" and event.tool_event:
         conversation.add_tool_event(event.tool_event)
+    elif event.action == "compaction" and event.compaction_progress:
+        conversation.set_compaction_progress(
+            event.compaction_progress, timestamp=event.timestamp
+        )
     elif event.action == "completed":
         conversation.complete_call(event.response, event.raw_history)
     if event.model_context is not None:

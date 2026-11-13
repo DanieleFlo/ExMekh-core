@@ -4,7 +4,11 @@ import base64
 from unittest.mock import MagicMock
 
 import pytest
-from exmekh_lib.core.agents.deep_agent import DeepAgentHistoryCompactionEvent
+from exmekh_lib.core.agents.deep_agent import (
+    DeepAgentCompactionProgressEvent,
+    DeepAgentHistoryCompactionEvent,
+)
+from exmekh_lib.core.history_compaction.progress import CompactionProgress
 from exmekh_lib.core.models.assistant_message import (
     AssistantMessage,
     FunctionCall,
@@ -22,6 +26,7 @@ from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.agents.event_handlers import DeepAgentTurnEventHandler
 from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEventRouter
 from exmekh_agent.exmekh_bridge.history.compaction import (
+    CompactionActivity,
     HistoryArchive,
     ModelContextCheckpoint,
     replay_model_context,
@@ -380,10 +385,29 @@ def test_child_compaction_keeps_separate_history_and_restores_it(probe, tmp_path
     ]
     session = ChatSession()
     events = []
-    run_turn(tmp_path, session, sub_events=events)
+    root_progress = []
+    run_turn(
+        tmp_path,
+        session,
+        sub_events=events,
+        on_compaction_progress=root_progress.append,
+    )
     assert session.messages[-1].content == "ROOT_DONE"
     child = session.sub_agent_conversations[0]
     assert child.messages[-1].model_context is not None
+    progress = [
+        event.compaction_progress for event in events if event.action == "compaction"
+    ]
+    assert progress
+    assert {event.agent_context_id for event in progress}.isdisjoint(
+        event.agent_context_id for event in root_progress
+    )
+    assert any(
+        isinstance(activity, CompactionActivity)
+        for activity in child.messages[-1]
+        .execution_timeline(include_stream=True)
+        .root_activity()
+    )
     assert "CHILD_ORIGINAL" in str(child.raw_history)
     assert "CHILD_ORIGINAL" not in str(child.replay_history())
     graph = build_graph_data_from_session(session)
@@ -432,6 +456,21 @@ def test_nested_skills_keep_original_outputs_after_compaction_and_reload(
     run_turn(tmp_path, session)
     assert session.messages[-1].content == "ROOT_DONE"
     restored = ChatSession.model_validate_json(session.model_dump_json())
+    message = restored.messages[-1]
+    assert message.model_context is not None
+    timeline = message.execution_timeline(include_stream=True)
+    skills = {node.path: node for root in message.skills for node in root.iter_nodes()}
+    nested_records = [
+        record for record in message.model_context.compactions if record.depth > 0
+    ]
+    assert nested_records
+    for record in nested_records:
+        assert record.duration_seconds is not None
+        assert record.completed_summaries is not None
+        assert any(
+            isinstance(activity, CompactionActivity) and activity.id == record.id
+            for activity in timeline.skill_activity(skills[record.skill_path])
+        )
     graph = build_graph_data_from_session(restored)
     raw = build_raw_history_from_session(restored)
     assert "PARENT_ORIGINAL" in str(raw)
@@ -735,6 +774,14 @@ def test_compaction_event_is_optional_for_event_observers():
     on_tool = MagicMock()
     handler = DeepAgentTurnEventHandler(
         SubAgentEventRouter(None), lambda _: None, lambda *_: None, on_tool, None, None
+    )
+    handler.handle(
+        DeepAgentCompactionProgressEvent(
+            depth=0,
+            skill_path="/",
+            agent_context_id="root",
+            progress=CompactionProgress("op", 0),
+        )
     )
     handler.handle(
         DeepAgentHistoryCompactionEvent(

@@ -405,7 +405,6 @@ def test_chat_view_component(ui_context: Client) -> None:
     )
     assert cv.current_live_reasoning_container is not None
     assert cv.current_live_reasoning_container.visible is True
-    assert cv.current_master_reasoning_expansion is None
     assert len(cv.streaming_reasoning_blocks) == 1
     assert cv.streaming_reasoning_blocks[0].content == (
         "Reasoning token 1 Reasoning token 2"
@@ -416,42 +415,48 @@ def test_chat_view_component(ui_context: Client) -> None:
         "Skill reasoning", skill_path="/sub", depth=1, generation_index=2
     )
     assert len(cv.streaming_reasoning_blocks) == 2
-    assert cv.current_master_reasoning_expansion is not None
-    assert cv.current_master_reasoning_expansion.value is False
     assert cv.current_live_reasoning_block is cv.streaming_reasoning_blocks[1]
-    assert cv.current_reasoning_container.default_slot.children == [
-        cv.current_master_reasoning_expansion,
-        cv.current_live_reasoning_container,
-    ]
+    first_thinking, live_thinking = cv.current_activity_container.default_slot.children
+    assert first_thinking.value is False
+    assert live_thinking is cv.current_live_reasoning_container
     assert cv.streaming_reasoning_blocks[1].content == "Skill reasoning"
     assert "Skill reasoning" in cv.current_thinking_label.content
     assert "Reasoning token 1" not in cv.current_thinking_label.content
 
-    # A tool finishes the second step; another step appears below the summary.
+    # The tool appears below the compacted thinking. The next step follows it.
     cv.add_tool_event(ToolEvent(tool_name="root_tool", skill_path="/", depth=0))
     assert cv.current_live_reasoning_container is None
     assert cv.current_live_reasoning_block is None
     cv.stream_reasoning("Final thought", skill_path="/", depth=0, generation_index=3)
-    assert cv.current_master_reasoning_expansion is not None
-    assert cv.current_master_reasoning_expansion.value is False
     assert cv.current_live_reasoning_container is not None
     assert cv.current_live_reasoning_block is cv.streaming_reasoning_blocks[2]
     assert len(cv.streaming_reasoning_blocks) == 3
-    assert cv.current_reasoning_container.default_slot.children == [
-        cv.current_master_reasoning_expansion,
-        cv.current_live_reasoning_container,
+    activity = cv.current_activity_container
+    assert [child.value for child in activity.default_slot.children[:2]] == [
+        False,
+        False,
     ]
+    assert "tool-event-card" in activity.default_slot.children[2]._classes
+    assert activity.default_slot.children[-1] is cv.current_live_reasoning_container
     assert "Final thought" in cv.current_thinking_label.content
 
     # Response content finishes the last live step.
     cv.stream_token("Chunk 1 ")
     assert cv.current_live_reasoning_container is None
     assert cv.current_live_reasoning_block is None
-    assert cv.current_master_reasoning_expansion is not None
-    assert cv.current_master_reasoning_expansion.value is False
-    assert cv.current_reasoning_container.default_slot.children == [
-        cv.current_master_reasoning_expansion
-    ]
+    assert activity.default_slot.children[-2].value is False
+    assert "Chunk 1" in activity.default_slot.children[-1].content
+    cv.add_tool_event(ToolEvent(tool_name="after_content"))
+    assert "Chunk 1" in activity.default_slot.children[-3].content
+    assert "tool-event-card" in activity.default_slot.children[-2]._classes
+
+    cv.stream_token("Between ")
+    cv.stream_token("tools")
+    cv.add_tool_event(ToolEvent(tool_name="follow_up"))
+    first_tool, _, text, second_tool, _ = activity.default_slot.children[-5:]
+    assert "tool-event-card" in first_tool._classes
+    assert "Between tools" in text.content
+    assert "tool-event-card" in second_tool._classes
 
     cv.handle_live_skill_event(skill_active, "opened")
 
@@ -563,12 +568,11 @@ def test_chat_view_edge_cases(ui_context: Client) -> None:
 
         cv.build()
 
-        # 2. current_reasoning_container is None guard
-        cv.current_reasoning_container = None
+        # 2. No live activity container
+        cv.current_activity_container = None
         cv.stream_reasoning("test", "/", 0, 1)
 
-        # 3. current_skills_container is None guard
-        cv.current_skills_container = None
+        # 3. Skill events can also arrive without a live container
         cv.handle_live_skill_event(SkillNode(), "opened")
 
         # 4. Finalize a partially built stream
@@ -887,77 +891,57 @@ def test_chat_view_steering_loading_spinner(ui_context: Client) -> None:
     with ui_context:
         cv = ChatViewComponent(on_suggested_prompt=lambda _: None)
         cv.build()
-
-        # 1. Start streaming turn
         cv.start_assistant_stream()
-        assert len(cv.streaming_steering_spinners) == 0
-
-        # 2. Receive live steering message
-        msg1 = QueuedMessage(id="steering-1", text="Redirect to approach B")
-        cv.show_steering_messages([msg1])
-
-        # Spinner should be created and registered
-        assert "steering-1" in cv.streaming_steering_spinners
-        spinner1 = cv.streaming_steering_spinners["steering-1"]
-        assert spinner1.visible is True
-
-        # 3. Add second steering message
-        msg2 = QueuedMessage(id="steering-2", text="Also check edge cases")
-        cv.show_steering_messages([msg2])
-        assert "steering-2" in cv.streaming_steering_spinners
-        spinner2 = cv.streaming_steering_spinners["steering-2"]
-        assert spinner2.visible is True
-
-        # 4. First steering message gets confirmed and inserted into history
+        pending = cv.current_steering_container
+        activity = cv.current_activity_container
+        first = QueuedMessage(text="Redirect to approach B")
+        second = QueuedMessage(text="Also check edge cases")
         turn_msg = ChatMessage(
             role="assistant",
-            content="Working on approach B...",
-            steering_messages=[msg1, msg2],
-            steering_insertions=[
-                SteeringInsertion(
-                    message_id="steering-1",
-                    after_tool_call_id=None,
-                    tool_name=None,
-                    skill_path="/",
-                )
-            ],
+            steering_messages=[first, second],
+            steering_insertions=[],
         )
-        cv.show_steering_insertions(turn_msg)
-
-        # spinner1 should now be popped from dict and hidden
-        assert "steering-1" not in cv.streaming_steering_spinners
-        assert spinner1.visible is False
-
-        # spinner2 should still be pending
-        assert "steering-2" in cv.streaming_steering_spinners
-        assert spinner2.visible is True
-
-        # 5. Finalize stream hides all remaining spinners and clears dict
-        cv.finalize_stream()
-        assert len(cv.streaming_steering_spinners) == 0
-        assert spinner2.visible is False
-
-        # 6. Test restore_stream_snapshot with mixed inserted and pending messages
-        cv.start_assistant_stream()
-        cv.restore_stream_snapshot(turn_msg)
-        # msg1 was already in steering_insertions, so only msg2 should get a pending spinner
-        assert "steering-1" not in cv.streaming_steering_spinners
-        assert "steering-2" in cv.streaming_steering_spinners
-        cv.finalize_stream()
-
-        # 7. Static historical message should render without pending spinner
-        historical_msg = ChatMessage(
-            role="assistant",
-            content="Done",
-            steering_messages=[msg1],
-            steering_insertions=[
-                SteeringInsertion(
-                    message_id="steering-1",
-                    after_tool_call_id=None,
-                    tool_name=None,
-                    skill_path="/",
-                )
-            ],
+        cv.update_stream_history(turn_msg)
+        assert (
+            sum(
+                "steering-loading-spinner" in element._classes
+                for element in pending.descendants()
+            )
+            == 2
         )
-        cv._render_message(historical_msg)
-        assert len(cv.streaming_steering_spinners) == 0
+
+        turn_msg.steering_insertions = [
+            SteeringInsertion(
+                message_id=first.id,
+                after_tool_call_id=None,
+                tool_name=None,
+                skill_path="/",
+            )
+        ]
+        cv.update_stream_history(turn_msg)
+        cv.update_stream_history(
+            turn_msg.model_copy(update={"steering_insertions": []})
+        )
+        assert (
+            sum(
+                "steering-loading-spinner" in element._classes
+                for element in pending.descendants()
+            )
+            == 1
+        )
+        assert (
+            sum(
+                "msg-user-steering" in element._classes
+                for element in activity.descendants()
+            )
+            == 1
+        )
+        cv.finalize_stream()
+        assert all(
+            "steering-loading-spinner" not in element._classes
+            for element in pending.descendants()
+        )
+        assert any(
+            getattr(element, "text", None) == "Steering · unconfirmed"
+            for element in pending.descendants()
+        )

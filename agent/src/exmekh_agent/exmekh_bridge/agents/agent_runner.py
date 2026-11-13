@@ -115,7 +115,7 @@ def execute_agent_turn_sync(
     agent_mode: str,
     capabilities_path_str: str,
     name_hds: str,
-    on_token: Callable[[str], None],
+    on_token: Callable[..., None],
     on_reasoning: Callable[..., None],
     on_tool_event: Callable[[ToolEvent], None],
     on_skill_event: Callable[[SkillNode, str], None] | None = None,
@@ -371,6 +371,11 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
         )
         publish_multimodal_history(event.history, event.history_tree)
 
+    def on_compaction_progress(event: DeepAgentCompactionProgressEvent) -> None:
+        archive.observe_compaction_progress(event)
+        if request.on_compaction_progress is not None:
+            request.on_compaction_progress(event)
+
     event_handler = DeepAgentTurnEventHandler(
         event_router,
         request.on_token,
@@ -383,7 +388,7 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
         request.steering if request.agent_mode == "deep_agent" else None,
         request.on_steering_added,
         on_compaction,
-        request.on_compaction_progress,
+        on_compaction_progress,
     )
     if context_provider is not None:
         context_provider.set_request_observer(event_handler.begin_request)
@@ -467,7 +472,7 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
 async def run_agent_turn(
     user_prompt: str,
     model: str,
-    on_token: Callable[[str], None],
+    on_token: Callable[..., None],
     on_reasoning: Callable[..., None],
     on_tool_event: Callable[[ToolEvent], None],
     agent_mode: str | None = None,

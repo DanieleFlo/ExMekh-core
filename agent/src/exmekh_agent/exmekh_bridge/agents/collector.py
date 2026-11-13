@@ -12,10 +12,15 @@ from typing import Any
 from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
 
 from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
-from exmekh_agent.exmekh_bridge.history.compaction import ModelContextCheckpoint
+from exmekh_agent.exmekh_bridge.history.compaction import (
+    CompactionActivity,
+    ModelContextCheckpoint,
+    update_compaction_activity,
+)
 from exmekh_agent.exmekh_bridge.history.skill_history import skill_opening_call_id
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
+    ContentBlock,
     MessageRole,
     ProviderContextUsage,
     QueuedMessage,
@@ -25,17 +30,10 @@ from exmekh_agent.exmekh_bridge.models import (
     extract_turn_raw_history,
     record_tool_event,
 )
-
-
-def _find_skill_by_path(
-    nodes: list[SkillNode], path: str, opening_tool_call_id: str | None = None
-) -> SkillNode | None:
-    """Find the most recent invocation through each skill's public interface."""
-    for item in reversed(nodes):
-        found = item.find_invocation(path, opening_tool_call_id)
-        if found is not None:
-            return found
-    return None
+from exmekh_agent.exmekh_bridge.models.execution import (
+    find_skill_invocation,
+    record_skill_snapshot,
+)
 
 
 class TurnStreamCollector:
@@ -48,11 +46,10 @@ class TurnStreamCollector:
 
     def __init__(self) -> None:
         self.steering = TurnSteering()
-        self.tokens: list[str] = []
-        self.reasoning_tokens: list[str] = []
+        self.content_blocks: list[ContentBlock] = []
+        self.current_content_block: ContentBlock | None = None
         self.reasoning_blocks: list[ReasoningBlock] = []
         self.current_reasoning_block: ReasoningBlock | None = None
-        self.generation_counter: int = 0
         self.tools: list[ToolEvent] = []
         self.skills: list[SkillNode] = []
         self.raw_history: list[dict[str, Any]] = []
@@ -60,17 +57,14 @@ class TurnStreamCollector:
         self.skill_history_tree: list[dict[str, Any]] = []
         self.context_usage: ProviderContextUsage | None = None
         self._pending_skill_before: dict[str, int] = {}
-        self._compactions: dict[str, DeepAgentCompactionProgressEvent] = {}
+        self._compactions: list[CompactionActivity] = []
 
     def set_compaction_progress(self, event: DeepAgentCompactionProgressEvent) -> None:
-        operation_id = event.progress.operation_id
-        if event.progress.finished:
-            self._compactions.pop(operation_id, None)
-        else:
-            self._compactions[operation_id] = event
+        if update_compaction_activity(self._compactions, event):
+            self.finish_stream_block()
 
-    def compaction_snapshot(self) -> list[DeepAgentCompactionProgressEvent]:
-        return list(self._compactions.values())
+    def compaction_snapshot(self) -> list[CompactionActivity]:
+        return list(self._compactions)
 
     def _close_current_reasoning_block(self) -> None:
         """Finalize timing on the active reasoning block if one is open."""
@@ -78,12 +72,25 @@ class TurnStreamCollector:
             self.current_reasoning_block.finalize_timing()
             self.current_reasoning_block = None
 
-    def append_token(self, token: str) -> None:
+    def finish_stream_block(self) -> None:
+        """Close the active text or thinking block at an execution boundary."""
+        self._close_current_reasoning_block()
+        self.current_content_block = None
+
+    def append_token(
+        self, token: str, skill_path: str = "/", depth: int = 0
+    ) -> ContentBlock:
         """Append a content token to the stream accumulator."""
         self._close_current_reasoning_block()
-        self.tokens.append(token)
+        block = self.current_content_block
+        if block is None or block.skill_path != skill_path or block.depth != depth:
+            block = ContentBlock(skill_path=skill_path, depth=depth)
+            self.current_content_block = block
+            self.content_blocks.append(block)
+        block.content += token
         if self.context_usage:
             self.context_usage.append_content(token)
+        return block
 
     def append_reasoning(
         self, token: str, skill_path: str = "/", depth: int = 0
@@ -93,7 +100,7 @@ class TurnStreamCollector:
         If the skill path, depth, or generation boundary has changed,
         creates a new distinct ReasoningBlock with an incremented generation index.
         """
-        self.reasoning_tokens.append(token)
+        self.current_content_block = None
         if self.context_usage:
             self.context_usage.append_reasoning(token)
         if (
@@ -102,11 +109,10 @@ class TurnStreamCollector:
             or self.current_reasoning_block.depth != depth
         ):
             self._close_current_reasoning_block()
-            self.generation_counter += 1
             self.current_reasoning_block = ReasoningBlock(
                 skill_path=skill_path,
                 depth=depth,
-                generation_index=self.generation_counter,
+                generation_index=len(self.reasoning_blocks) + 1,
                 content=token,
             )
             self.reasoning_blocks.append(self.current_reasoning_block)
@@ -117,8 +123,10 @@ class TurnStreamCollector:
 
     def append_tool(self, ev: ToolEvent) -> None:
         """Record a tool execution event and demarcate a generation step."""
-        self._close_current_reasoning_block()
+        count = len(self.tools)
         record_tool_event(self.tools, ev)
+        if len(self.tools) != count:
+            self.finish_stream_block()
 
     def turn_raw_history(self) -> list[dict[str, Any]]:
         return extract_turn_raw_history(
@@ -136,21 +144,13 @@ class TurnStreamCollector:
 
     def append_skill(self, node: SkillNode, action: str = "opened") -> None:
         """Record or update a skill node, preserving opening start_time and computing duration."""
-        self._close_current_reasoning_block()
-        node = node.model_copy(deep=True)
-        node.finalize_timing(action if action in ("completed", "error") else None)
+        if action != "updated":
+            self.finish_stream_block()
+        node = node.receive_snapshot(action)
         if self.context_usage and action == "completed":
             node.await_closure_tokens()
 
-        existing = _find_skill_by_path(
-            self.skills, node.path, node.opening_tool_call_id
-        )
-        if existing is not None:
-            existing.merge_snapshot(node)
-            return
-
-        if node.depth == 1:
-            self.skills.append(node)
+        record_skill_snapshot(self.skills, node)
 
     def set_raw_history(
         self,
@@ -226,11 +226,14 @@ class TurnStreamCollector:
 
     def get_final_content(self, fallback: str = "") -> str:
         """Return accumulated stream tokens as string, or fallback if empty."""
-        return "".join(self.tokens) or fallback
+        return (
+            "".join(block.content for block in self.content_blocks if block.depth == 0)
+            or fallback
+        )
 
     def get_reasoning_content(self) -> str:
         """Return all reasoning tokens joined as a single string."""
-        return "".join(self.reasoning_tokens)
+        return "".join(block.content for block in self.reasoning_blocks)
 
     def snapshot_message(self) -> ChatMessage:
         """Return the current turn without finalizing active events."""
@@ -250,6 +253,7 @@ class TurnStreamCollector:
             content=self.get_final_content(fallback_content),
             reasoning_content=self.get_reasoning_content(),
             reasoning_blocks=self.reasoning_blocks,
+            content_blocks=self.content_blocks,
             tool_events=self.tools,
             skills=self.skills,
             raw_history=self.raw_history,
@@ -266,15 +270,16 @@ class TurnStreamCollector:
         message.image_urls = message.generated_image_urls()
         return message
 
-    def skill_snapshot(self, path: str) -> SkillNode | None:
+    def skill_snapshot(self, path: str, call_id: str | None = None) -> SkillNode | None:
         """Return an independent snapshot of a collected skill by path."""
-        skill = _find_skill_by_path(self.skills, path)
+        skill = find_skill_invocation(self.skills, path, call_id)
         return skill.model_copy(deep=True) if skill is not None else None
 
     def build_message(
         self,
         role: MessageRole = "assistant",
         fallback_content: str = "",
+        response: str = "",
         error: str | None = None,
     ) -> ChatMessage:
         """Construct a final ChatMessage containing all accumulated state."""
@@ -283,6 +288,11 @@ class TurnStreamCollector:
             role=role,
             fallback_content=fallback_content,
             error=error,
-        )
+        ).model_copy(deep=True)
+        if response:
+            active = self.current_content_block
+            message.complete_content(
+                response, continues_stream=active is not None and active.depth == 0
+            )
         message.finalize_execution("completed" if error is None else "error")
-        return message.model_copy(deep=True)
+        return message

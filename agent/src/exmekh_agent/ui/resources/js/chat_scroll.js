@@ -97,7 +97,8 @@
         }
 
         const userNodes = Array.from(active.querySelectorAll('.chat-message-user, .msg-user'));
-        const userRows = [...new Set(userNodes.map(el => el.closest('.chat-message-row') || el))];
+        const userRows = [...new Set(userNodes.map(el => el.closest('.chat-message-row') || el))]
+            .filter(row => row.getClientRects().length > 0);
 
         const assistantNodes = Array.from(active.querySelectorAll('.chat-message-assistant, .msg-assistant'));
         const assistantRows = [...new Set(assistantNodes.map(el => el.closest('.chat-message-row') || el))];

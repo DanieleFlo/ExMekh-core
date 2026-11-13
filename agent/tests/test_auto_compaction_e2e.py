@@ -52,8 +52,28 @@ async def test_compaction_bar_is_in_response_and_survives_reload(
             progress = page.locator(".msg-assistant .compaction-progress")
             await expect(progress).to_be_visible()
             await expect(progress).to_contain_text("Evaluating outputs")
-            await expect(progress).to_contain_text(re.compile(r"Elapsed [1-9][0-9]*s"))
+            await expect(progress.locator(".compaction-elapsed")).to_have_text(
+                re.compile(r"Elapsed [1-9][0-9]*s")
+            )
             await expect(progress.get_by_role("progressbar")).to_be_visible()
+            progress_heading = progress.locator(".compaction-progress-heading")
+            await expect(progress_heading).to_have_css(
+                "border-left-color", "rgb(56, 189, 248)"
+            )
+            icon_offset = """row => {
+                const icon = row.querySelector('.tool-event-main > .q-icon');
+                return icon.getBoundingClientRect().x - row.getBoundingClientRect().x;
+            }"""
+            preceding_tool = page.locator(".msg-assistant .tool-event-card").first
+            assert await progress_heading.evaluate(
+                icon_offset
+            ) == await preceding_tool.evaluate(icon_offset)
+            order = page.locator(
+                ".msg-assistant .tool-event-card, .msg-assistant .compaction-progress"
+            )
+            assert await order.evaluate_all(
+                "nodes => nodes.map(node => node.matches('.compaction-progress') ? 'progress' : 'tool')"
+            ) == ["tool", "progress"]
             await page.screenshot(
                 path=str(tmp_path / "compaction-progress.png"), full_page=True
             )
@@ -79,6 +99,30 @@ async def test_compaction_bar_is_in_response_and_survives_reload(
                 await expect(page.locator(".msg-assistant").last).to_contain_text(
                     "COMPACTION_OK"
                 )
+                markers = page.locator(".msg-assistant .compaction-marker")
+                await expect(
+                    markers.first.locator(".compaction-marker-details")
+                ).to_have_text(
+                    re.compile(
+                        r"Elapsed .+ · [1-9][0-9]* history blocks? · [0-9]+ summar(?:y|ies)"
+                    )
+                )
+                order = page.locator(
+                    ".msg-assistant .tool-event-card, .msg-assistant .compaction-marker, "
+                    ".msg-assistant .parsed-response-content"
+                )
+                for reload in (False, True):
+                    if reload:
+                        await page.reload(wait_until="networkidle")
+                    steps = await order.evaluate_all(
+                        """nodes => nodes.map(node => {
+                            if (node.matches('.tool-event-card')) return 'tool';
+                            if (node.matches('.compaction-marker')) return 'compaction';
+                            return 'text';
+                        })"""
+                    )
+                    assert steps[:3] == ["tool", "compaction", "tool"]
+                    assert steps[-1] == "text"
             else:
                 assert (await state(compaction_server))["session"]["messages"][-1][
                     "error"

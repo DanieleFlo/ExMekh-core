@@ -34,8 +34,8 @@ def test_tool_results_are_consistent_in_root_child_and_live_view(
     conversation = SubAgentConversation(path="main/worker")
     conversation.start_call("Run a tool")
     view = ChatViewComponent(lambda _: None)
-    view.current_skills_container = MagicMock()
-    view._refresh_streaming_skills_and_tools = MagicMock()
+    view.current_activity_container = MagicMock()
+    view._refresh_streaming_activity = MagicMock()
     recorders = [
         collector.append_tool,
         conversation.add_tool_event,
@@ -60,7 +60,7 @@ def test_tool_results_are_consistent_in_root_child_and_live_view(
         record(end)
     root = collector.tools[0]
     child = conversation.messages[-1].tool_events[0]
-    live = view.streaming_root_tools[0]
+    live = view.streaming_tools[0]
     assert root == child == live
     assert root.status == status
     assert root.end_time == root.duration_seconds == 0
@@ -317,12 +317,12 @@ def test_framework_failure_status_is_preserved_in_root_child_and_ui(
     child = SubAgentConversation(path="main/worker")
     child.start_call("Run work")
     view = ChatViewComponent(lambda _: None)
-    view.current_skills_container = MagicMock()
-    view._refresh_streaming_skills_and_tools = MagicMock()
+    view.current_activity_container = MagicMock()
+    view._refresh_streaming_activity = MagicMock()
     for record in (collector.append_tool, child.add_tool_event, view.add_tool_event):
         record(start)
         record(end)
     root = collector.tools[0]
-    assert root == child.messages[-1].tool_events[0] == view.streaming_root_tools[0]
+    assert root == child.messages[-1].tool_events[0] == view.streaming_tools[0]
     assert root.status == ("error" if failed else "completed")
     assert root.duration_seconds == 2

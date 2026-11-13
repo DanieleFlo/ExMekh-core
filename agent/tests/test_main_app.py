@@ -8,7 +8,12 @@ import pytest
 from nicegui.client import Client
 from nicegui.page import page
 
-from exmekh_agent.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
+from exmekh_agent.exmekh_bridge.models import (
+    ChatMessage,
+    ContentBlock,
+    SkillNode,
+    ToolEvent,
+)
 from exmekh_agent.exmekh_bridge.providers.context_usage import ContextUsageSummary
 from exmekh_agent.exmekh_bridge.providers.core_management import Connection, CoreStatus
 from exmekh_agent.main import index_page, main, run
@@ -189,7 +194,11 @@ async def test_index_page_full_flow(app_client: Client) -> None:
                 assert len(s.title) <= 34
                 assert "..." in s.title
                 assert len(s.messages) == 2
-                assert s.messages[-1].content == "Token chunk"
+                assert s.messages[-1].content == "Turn completed"
+                assert [block.content for block in s.messages[-1].content_blocks] == [
+                    "Token chunk",
+                    "Turn completed",
+                ]
                 assert s.messages[-1].error is None
 
             # 9. Send message - Exception error handling path
@@ -297,7 +306,8 @@ async def test_stream_view_updates_run_on_client_event_loop(app_client: Client) 
     update_threads: list[int] = []
     update_received = asyncio.Event()
 
-    def record_stream_token(_: str) -> None:
+    def record_stream_token(_: str, *, block: ContentBlock) -> None:
+        assert block.skill_path == "/"
         update_threads.append(threading.get_ident())
         update_received.set()
 

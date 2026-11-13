@@ -47,11 +47,15 @@ class SteeringProbeProvider(MockProvider):
 
     @staticmethod
     def _tool_response(
-        call_id: str, name: str, arguments: dict[str, Any]
+        call_id: str,
+        name: str,
+        arguments: dict[str, Any],
+        *,
+        content: str | None = None,
     ) -> ProviderResponse:
         return ProviderResponse(
             AssistantMessage(
-                content=None,
+                content=content,
                 tool_calls=[
                     ToolCall(
                         id=call_id,
@@ -60,6 +64,17 @@ class SteeringProbeProvider(MockProvider):
                 ],
             )
         )
+
+    @staticmethod
+    def _stream_skill_text(request: ProviderRequest, thought: str, *parts: str) -> str:
+        request.execute_on_stream_event(
+            ProviderStreamEvent(ProviderStreamEventType.REASONING, thought)
+        )
+        for part in parts:
+            request.execute_on_stream_event(
+                ProviderStreamEvent(ProviderStreamEventType.RESPONSE, part)
+            )
+        return "".join(parts)
 
     def call(self, request: ProviderRequest) -> ProviderResponse:
         messages = [exmekh_message_to_raw_dict(item) for item in request.get_messages()]
@@ -81,6 +96,11 @@ class SteeringProbeProvider(MockProvider):
                 "mock-skill" if opens_skill else "bash",
                 {} if opens_skill else {"command": "echo steering_probe"},
             )
+        parent_text = None
+        if request_number == 2 and self.first_response == "nested_skill":
+            parent_text = self._stream_skill_text(
+                request, "Parent planning.", "Parent skill ", "progress."
+            )
         if request_number == 2 and (self.block_second or self.block_reply):
             self.second_started.set()
             if not self.release_second.wait(timeout=30):
@@ -88,15 +108,31 @@ class SteeringProbeProvider(MockProvider):
             if self.block_second:
                 return ProviderResponse(AssistantMessage("Intermediate answer"))
         if request_number == 2 and self.first_response == "nested_skill":
-            return self._tool_response("open-nested-steering-skill", "nested-skill", {})
+            return self._tool_response(
+                "open-nested-steering-skill", "nested-skill", {}, content=parent_text
+            )
         if request_number == 3 and self.first_response == "nested_skill":
+            text = self._stream_skill_text(
+                request, "Nested planning.", "Nested skill ", "before the tool."
+            )
             return self._tool_response(
                 "nested-steering-tool",
                 "nested-sub-tool",
                 {"text": "Guided nested result"},
+                content=text,
+            )
+        if request_number == 4 and self.first_response == "nested_skill":
+            text = self._stream_skill_text(
+                request, "Nested review.", "Nested skill ", "between the tools."
+            )
+            return self._tool_response(
+                "nested-follow-up-tool",
+                "nested-sub-tool",
+                {"text": "Follow-up nested result"},
+                content=text,
             )
         if (request_number == 2 and self.first_response == "skill") or (
-            request_number in (4, 5) and self.first_response == "nested_skill"
+            request_number in (5, 6) and self.first_response == "nested_skill"
         ):
             return self._tool_response(
                 f"close-steering-skill-{request_number}",

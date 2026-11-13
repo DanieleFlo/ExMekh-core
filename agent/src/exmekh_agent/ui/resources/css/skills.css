@@ -8,59 +8,65 @@
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    margin-top: 2px;
-    margin-bottom: 2px;
+    min-width: 0;
 }
 
-/* Active Skill: seamless with subtle left indicator */
-.skill-container-active {
-    background: transparent !important;
-    border: none !important;
-    border-left: 2px solid var(--border-strong) !important;
-    padding-left: 10px !important;
+.skill-activity {
+    border-left: 2px solid var(--border-subtle);
+    padding-inline-start: 10px;
 }
 
-/* Compacted Skill: clean seamless header bar */
 .skill-compact-header {
-    background: transparent !important;
-    border: none !important;
-    padding: 4px 0 !important;
     cursor: pointer;
     user-select: none;
 }
 
-.skill-compact-header:hover {
-    background: transparent !important;
-    color: var(--text-main) !important;
-}
-
-/* Depth levels styling: clean minimal guidelines */
-.skill-depth-1 {
-    border-left: 2px solid var(--border-subtle) !important;
-    background: transparent !important;
-}
-
-.skill-depth-2 {
-    border-left: 2px solid var(--border-active) !important;
-    background: transparent !important;
-    margin-left: 10px;
-}
-
-.skill-depth-3 {
-    border-left: 2px solid var(--border-strong) !important;
-    background: transparent !important;
-    margin-left: 20px;
-}
-
-/* Tool execution card - Codex Minimal CLI Line */
-.tool-event-card {
+/* Shared timeline row geometry. Skill bodies provide the nesting indent. */
+.execution-row {
     min-width: 0;
     flex-wrap: nowrap !important;
     background: transparent !important;
     border: none !important;
-    border-left: 2px solid var(--border-subtle) !important;
+    border-left: 2px solid var(--execution-row-accent, var(--border-subtle)) !important;
     font-size: 0.82rem !important;
     padding: 2px 0 2px 10px !important;
+}
+
+.skill-header-completed {
+    --execution-row-accent: var(--green);
+}
+
+.skill-header-error {
+    --execution-row-accent: var(--rose);
+}
+
+.skill-header-completed + .skill-activity {
+    border-left-color: var(--green);
+}
+
+.skill-header-error + .skill-activity {
+    border-left-color: var(--rose);
+}
+
+.skill-compact-header .skill-status-icon {
+    color: var(--execution-row-accent);
+}
+
+.compaction-marker,
+.compaction-progress-heading {
+    --execution-row-accent: var(--sky);
+}
+
+.compaction-status-icon {
+    color: var(--execution-row-accent);
+}
+
+.compaction-progress-body {
+    padding-inline-start: 12px;
+}
+
+.compaction-marker-details {
+    max-width: 55%;
 }
 
 .tool-event-main {
@@ -80,6 +86,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.execution-row:not(.tool-event-card) .tool-event-name {
+    flex-shrink: 1;
+    max-width: none;
 }
 
 .tool-arguments-preview {
@@ -116,13 +127,16 @@
     flex-shrink: 0;
 }
 
-.tool-event-card:hover {
-    background: transparent !important;
-    border-left-color: var(--border-strong) !important;
+.tool-event-card:hover,
+.reasoning-master-header:hover,
+.reasoning-live-header:hover,
+.skill-compact-header:hover {
+    border-left-color: var(--execution-row-accent, var(--border-strong)) !important;
 }
 
 .tool-event-card[aria-expanded="true"],
-.tool-event-card[aria-expanded="true"]:hover {
+.tool-event-card[aria-expanded="true"]:hover,
+.reasoning-master-expansion.q-expansion-item--expanded .reasoning-master-header {
     border-left-color: var(--sky) !important;
 }
 
@@ -143,7 +157,12 @@
 }
 
 .tool-output-toggle { cursor: pointer; }
-.tool-output-toggle:focus-visible { outline: 1px solid var(--sky); outline-offset: 2px; }
+.tool-output-toggle:focus-visible,
+.skill-compact-header:focus-visible,
+.reasoning-master-expansion > .q-expansion-item__container > .q-item:focus-visible {
+    outline: 1px solid var(--sky);
+    outline-offset: 2px;
+}
 .invocation-output-panel { position: relative; width: 100%; min-width: 0; max-height: 240px; overflow: auto; padding: 12px 36px 12px 12px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 7px; font-family: monospace; font-size: 12px; }
 .output-text { display: block; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; color: var(--text-secondary); }
 .output-header { display: flex; gap: 8px; flex-wrap: wrap; color: var(--sky-soft); padding-bottom: 10px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 10px; }
@@ -151,4 +170,12 @@
 .output-thinking { display: block; white-space: pre-wrap; color: var(--text-muted); border-left: 2px solid var(--border-strong); padding-left: 10px; margin-bottom: 12px; }
 .output-unavailable { color: var(--text-dim); }
 .output-copy-button { position: absolute; top: 4px; right: 4px; }
+.tool-parameters-expansion > .q-expansion-item__container > .q-item {
+    min-height: 32px;
+    padding: 4px 10px;
+    color: var(--text-muted);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 7px;
+}
 .skill-output-expansion > .q-expansion-item__container > .q-item { padding: 4px 0; min-height: 28px; color: var(--text-muted); }

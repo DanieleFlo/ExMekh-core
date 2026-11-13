@@ -577,7 +577,7 @@ async def test_exmekh_steering_in_skill_survives_compaction_and_export(
     )
     assert find_steering_insertions(restored.messages[-1]) == [position]
     assert message.skills[0].status == "completed"
-    assert len(provider.requests) == (6 if nested else 3)
+    assert len(provider.requests) == (7 if nested else 3)
     # ExMekh-Lib compacts the user entry out of root history into the skill transcript.
     assert not any(
         item.get("content") == guidance.text for item in provider.requests[-1]
@@ -1137,7 +1137,12 @@ async def test_controller_steers_real_exmekh_after_refresh_and_preserves_next_tu
             assert len(provider.requests) == 1
             assert original.input_bar.is_busy
             assert refreshed.chat_view.current_steering_container is not None
-            assert len(refreshed.chat_view.streaming_steering_ids) == 1
+            assert (
+                len(
+                    refreshed.chat_view.current_steering_container.default_slot.children
+                )
+                == 1
+            )
             provider.release.set()
             await _wait_for_probe(provider.second_started)
             assert not turn.done()

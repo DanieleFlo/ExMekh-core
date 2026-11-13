@@ -706,6 +706,31 @@ def test_input_bar_context_display_and_updates() -> None:
     assert "text-rose-400" in ib.context_percent_label._classes
 
 
+def test_repeated_skill_names_keep_the_counts_of_their_invocation() -> None:
+    first = SkillNode(
+        name="worker", path="/worker", status="completed", opening_tool_call_id="one"
+    )
+    second = first.model_copy(update={"id": "worker-2", "opening_tool_call_id": "two"})
+    turn = ChatMessage(
+        role="assistant",
+        skills=[first, second],
+        skill_history_tree=[
+            {
+                "skill": "worker",
+                "opening_tool_call_id": call_id,
+                "output": "done",
+                "tokens_before_close": before,
+                "tokens_after_close": after,
+            }
+            for call_id, before, after in [("one", 900, 300), ("two", 1800, 600)]
+        ],
+    )
+    populate_skill_closure_tokens(ChatSession(messages=[turn]))
+    assert [
+        (node.tokens_before_close, node.tokens_after_close) for node in turn.skills
+    ] == [(900, 300), (1800, 600)]
+
+
 def test_skill_closure_tokens_computation_and_ui_rendering() -> None:
     assert isinstance(cu.load_real_hds_system_prompt(), str)
     assert format_skill_closure_tokens(4800, 1200) == "4.8k → 1.2k token"
@@ -796,7 +821,7 @@ def test_skill_closure_tokens_computation_and_ui_rendering() -> None:
             "history": [{"role": "tool", "content": "step"}],
         }
     ]
-    matched_map: dict[str, tuple[int, int]] = {}
+    matched_map: dict[tuple[str, str], tuple[int, int]] = {}
     _annotate_skill_tree_recursive([], unmatched_tree, [], matched_map)
     assert unmatched_tree[0]["tokens_before_close"] > 0
 

@@ -23,9 +23,26 @@ async def test_user_opens_tool_and_skill_outputs_scrolls_and_closes(output_serve
             await page.goto(output_server, wait_until="networkidle")
             rows = page.locator(".tool-event-card").filter(has_text="Tool: bash")
             panels = page.locator(".tool-output-panel")
-            await expect(panels.filter(has_text="FIRST RESULT")).not_to_be_visible()
+            first_output = panels.filter(has_text="FIRST RESULT")
+            first_details = first_output.locator("..")
+            first_parameters = first_details.locator(".tool-parameters-expansion")
+            first_parameters_body = first_parameters.locator(".tool-parameters-panel")
+            await expect(first_output).not_to_be_visible()
+            await expect(first_parameters).not_to_be_visible()
             await rows.nth(0).click()
-            await expect(panels.filter(has_text="FIRST RESULT")).to_be_visible()
+            await expect(first_output).to_be_visible()
+            await expect(first_parameters).to_be_visible()
+            await expect(first_parameters_body).not_to_be_visible()
+            assert (await first_parameters.bounding_box())["y"] < (
+                await first_output.bounding_box()
+            )["y"]
+            await first_parameters.get_by_text("Parameters", exact=True).click()
+            await expect(first_parameters_body).to_be_visible()
+            await expect(first_parameters_body).to_contain_text(
+                '"command": "first command"'
+            )
+            await first_parameters.get_by_text("Parameters", exact=True).click()
+            await expect(first_parameters_body).not_to_be_visible()
             await expect(panels.filter(has_text="FIRST RESULT")).to_contain_text(
                 "FIRST RESULT"
             )
@@ -45,6 +62,18 @@ async def test_user_opens_tool_and_skill_outputs_scrolls_and_closes(output_serve
             await expect(panels.filter(has_text="SECOND RESULT")).to_contain_text(
                 '"result": "SECOND RESULT"'
             )
+            second_parameters = (
+                panels.filter(has_text="SECOND RESULT")
+                .locator("..")
+                .locator(".tool-parameters-expansion")
+            )
+            await expect(
+                second_parameters.locator(".tool-parameters-panel")
+            ).not_to_be_visible()
+            await second_parameters.get_by_text("Parameters", exact=True).click()
+            await expect(
+                second_parameters.locator(".tool-parameters-panel")
+            ).to_contain_text('"command": "second command"')
             await panels.filter(has_text="FIRST RESULT").evaluate(
                 "element => element.scrollTop = 0"
             )
@@ -77,10 +106,25 @@ async def test_user_opens_tool_and_skill_outputs_scrolls_and_closes(output_serve
             await expect(panels.filter(has_text='"answer": 42')).to_contain_text(
                 '"answer": 42'
             )
+            nested_parameters = (
+                panels.filter(has_text='"answer": 42')
+                .locator("..")
+                .locator(".tool-parameters-expansion")
+            )
+            await expect(
+                nested_parameters.locator(".tool-parameters-panel")
+            ).not_to_be_visible()
+            await nested_parameters.get_by_text("Parameters", exact=True).click()
+            await expect(
+                nested_parameters.locator(".tool-parameters-panel")
+            ).to_contain_text('"expression": "6 * 7"')
             await page.locator(".sidebar-item-selected").first.click()
             await expect(skill_header).to_have_attribute("aria-expanded", "true")
             await expect(page.locator(".skill-output-panel")).to_be_visible()
             await expect(panels.filter(has_text='"answer": 42')).to_be_visible()
+            await expect(
+                nested_parameters.locator(".tool-parameters-panel")
+            ).to_be_visible()
             await expect(panels.filter(has_text="FIRST RESULT")).not_to_be_visible()
             state = await (await page.request.get(output_server + "/test/state")).json()
             assert state["session"]["messages"][-1]["skills"][0]["is_collapsed"] is True

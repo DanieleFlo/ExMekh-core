@@ -117,6 +117,63 @@ def test_child_stream_updates_the_active_chat_block() -> None:
     assert child.messages[-1].is_streaming is False
 
 
+@pytest.mark.parametrize(
+    ("partial", "response", "final_block"),
+    [
+        ("Partial answer", "Final answer", "Final answer"),
+        ("", "Final answer", "Final answer"),
+        ("", "Between tools.", None),
+        ("", "", None),
+    ],
+)
+def test_child_content_stays_between_tools_after_reload(
+    partial: str, response: str, final_block: str | None
+) -> None:
+    session = ChatSession()
+    base = {"id": "live", "path": "main/child", "persistent_history": False}
+    child = apply_sub_agent_event(session, SubAgentEvent(action="started", **base))
+    first = ToolEvent(
+        tool_name="read",
+        tool_call_id="read-1",
+        event_type="tool_start",
+        timestamp=10,
+    )
+    second = ToolEvent(tool_name="write", tool_call_id="write-1", timestamp=30)
+    for event in (
+        SubAgentEvent(action="token", token="Preparing. ", timestamp=5, **base),
+        SubAgentEvent(action="tool", tool_event=first, **base),
+        SubAgentEvent(action="token", token="Between ", timestamp=20, **base),
+        SubAgentEvent(
+            action="tool",
+            tool_event=first.model_copy(
+                update={"event_type": "tool_end", "timestamp": 22}
+            ),
+            **base,
+        ),
+        SubAgentEvent(action="token", token="tools.", timestamp=25, **base),
+        SubAgentEvent(action="tool", tool_event=second, **base),
+        SubAgentEvent(action="token", token=partial, timestamp=40, **base),
+    ):
+        apply_sub_agent_event(session, event)
+
+    live = child.messages[-1].model_copy(deep=True)
+    apply_sub_agent_event(
+        session, SubAgentEvent(action="completed", response=response, **base)
+    )
+    restored = ChatSession.model_validate_json(session.model_dump_json())
+    finished = restored.sub_agent_conversations[0].messages[-1]
+    for message, tail in [(live, partial or None), (finished, final_block)]:
+        activities = message.execution_timeline(include_stream=True).root_activity()
+        expected = ["Preparing. ", "read", "Between tools.", "write"]
+        if tail is not None:
+            expected.append(tail)
+        assert [
+            activity.tool_name if isinstance(activity, ToolEvent) else activity.content
+            for activity in activities
+        ] == expected
+    assert finished.content == (response or "Preparing. Between tools.")
+
+
 def test_sub_agent_call_rejects_out_of_order_events() -> None:
     session = ChatSession()
     base = {"id": "child", "path": "main/child", "persistent_history": True}
@@ -152,10 +209,13 @@ def test_child_reasoning_blocks_follow_skill_boundaries() -> None:
             ),
         )
 
-    blocks = session.sub_agent_conversations[0].messages[-1].reasoning_blocks
+    child = session.sub_agent_conversations[0]
+    child.append_reasoning("d", "/", 0)
+    blocks = child.messages[-1].reasoning_blocks
     assert [(block.content, block.skill_path, block.depth) for block in blocks] == [
         ("ab", "/", 0),
         ("c", "/skill", 1),
+        ("d", "/", 0),
     ]
 
 
