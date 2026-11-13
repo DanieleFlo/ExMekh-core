@@ -8,6 +8,8 @@ dependencies = [
     "nicegui>=2.0.0",
     "python-dotenv>=1.0.0",
     "httpx>=0.27.0",
+    "httpx2>=2.13.1",
+    "openai>=3.3.0",
     "pydantic>=2.0.0",
     "pyyaml>=6.0",
     "exmekh-lib",
@@ -56,6 +58,7 @@ omit = [
     "src/exmekh_agent/ui/settings/project_settings_dialog.py",
     # NiceGUI rendering runs in a separate browser-test process.
     "src/exmekh_agent/ui/settings/core_views.py",
+    "src/exmekh_agent/ui/settings/activity_view.py",
     "src/exmekh_agent/ui/settings/setup_pages.py",
     "src/exmekh_agent/ui/settings/system_pages.py",
     "src/exmekh_agent/ui/navigation/new_project_dialog.py",
